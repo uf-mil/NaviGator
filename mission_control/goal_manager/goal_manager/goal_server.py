@@ -2,7 +2,7 @@
 
 import rospy
 import actionlib
-import sub8_mission_control.msg
+import goal_manager.msg
 
 """ This server is currently a barebones server and is used only to test the
     client node at the moment
@@ -12,11 +12,11 @@ import sub8_mission_control.msg
 class goal_server(object):
 
     def __init__(self):
-        self.server = actionlib.SimpleActionServer('goal', sub8_mission_control.msg.current_goalAction,
+        self.server = actionlib.SimpleActionServer('goal', goal_manager.msg.current_goalAction,
                                                    execute_cb=self.execute_cb, auto_start=False
                                                    )
-        self.feedback = sub8_mission_control.msg.current_goalFeedback()
-        self.result = sub8_mission_control.msg.current_goalResult()
+        self.feedback = goal_manager.msg.current_goalFeedback()
+        self.result = goal_manager.msg.current_goalResult()
         self.server.start()
         self.success = False
 

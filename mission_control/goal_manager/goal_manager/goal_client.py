@@ -2,16 +2,15 @@
 
 import rospy
 import actionlib
-import sub8_mission_control.msg
-from sub8_msgs.msg import Waypoint
-from sub8_ros_tools import geometry_helpers as gh
-from sub8_ros_tools import msg_helpers as mh
+import goal_manager.msg
+from nav_msgs.msg import Odometry
+from math_helpers import geometry_helper as gh
 
 
 class goal_proxy(object):
 
     '''
-        This class is used to send waypoint goals to the motion planner
+        This class is used to send Odometry goals to the motion planner
         It contains several shortcuts to send movements as well as the
         ability to specific location information
 
@@ -19,19 +18,20 @@ class goal_proxy(object):
 
     def __init__(self, testing):
 
-        self.current_pos = Waypoint()
-        self.client = actionlib.SimpleActionClient('goal', sub8_mission_control.msg.current_goalAction)
+        self.current_pos = Odometry()
+        self.client = actionlib.SimpleActionClient('goal', goal_manager.msg.current_goalAction)
         self.client.wait_for_server()
         self.testing = testing
+        rospy.Subscriber('/odom', Odometry, self.odom_cb)
 
     def odom_cb(self, msg):
-        ''' Capture lamove_result position '''
+        ''' Capture last move_result position '''
         self.current_pos = msg
 
     def send_goal(self, goal_pos, timeout=10):
         ''' Send a move_result move to the server to complete '''
 
-        goal = sub8_mission_control.msg.current_goalGoal(order=goal_pos)
+        goal = goal_manager.msg.current_goalGoal(waypoint=goal_pos)
         self.client.send_goal(goal)
 
         # Give the move the specified amount of time to complete
@@ -51,48 +51,48 @@ class goal_proxy(object):
 
     def move_forward(self, move, timeout=10):
         ''' Move forward in the given amount of time '''
-        to_send = Waypoint()
-        to_send.pose.position.x = self.current_pos.pose.position.x + move
+        to_send = Odometry()
+        to_send.pose.pose.position.x = self.current_pos.pose.pose.position.x + move
 
         move_result = self.send_goal(to_send, timeout)
         return move_result
 
     def move_back(self, move, timeout=10):
         ''' Move backwards in the given amount of time '''
-        to_send = Waypoint()
-        to_send.pose.position.x = self.current_pos.pose.position.x - move
+        to_send = Odometry()
+        to_send.pose.pose.position.x = self.current_pos.pose.pose.position.x - move
         # send goal to server to complete within timeout
         move_result = self.send_goal(to_send, timeout)
         return move_result
 
     def move_left(self, move, timeout=10):
         ''' Move left in the given amount of time '''
-        to_send = Waypoint()
-        to_send.pose.position.y = self.current_pos.pose.position.y - move
+        to_send = Odometry()
+        to_send.pose.pose.position.y = self.current_pos.pose.pose.position.y - move
         # send goal to server to complete within timeout
         move_result = self.send_goal(to_send, timeout)
         return move_result
 
     def move_right(self, move, timeout=10):
         ''' Move right in the given amount of time '''
-        to_send = Waypoint()
-        to_send.pose.position.y = self.current_pos.pose.position.y + move
+        to_send = Odometry()
+        to_send.pose.pose.position.y = self.current_pos.pose.pose.position.y + move
         # send goal to server to complete within timeout
         move_result = self.send_goal(to_send, timeout)
         return move_result
 
     def move_up(self, move, timeout=10):
         ''' Move up in the given amount of time '''
-        to_send = Waypoint()
-        to_send.pose.position.z = self.current_pos.pose.position.z + move
+        to_send = Odometry()
+        to_send.pose.pose.position.z = self.current_pos.pose.pose.position.z + move
         # send goal to server to complete within timeout
         move_result = self.send_goal(to_send, timeout)
         return move_result
 
     def move_down(self, move, timeout=10):
         ''' Move down in the given amount of time '''
-        to_send = Waypoint()
-        to_send.pose.position.z = self.current_pos.pose.position.z - move
+        to_send = Odometry()
+        to_send.pose.pose.position.z = self.current_pos.pose.pose.position.z - move
         # send goal to server to complete within timeout
         move_result = self.send_goal(to_send, timeout)
         return move_result
@@ -105,29 +105,29 @@ class goal_proxy(object):
         '''
 
         if x is None:
-            x = self.current_pos.pose.x
+            x = self.current_pos.pose.pose.x
         if y is None:
-            y = self.current_pos.pose.y
+            y = self.current_pos.pose.pose.y
         if z is None:
-            z = self.current_pos.pose.z
+            z = self.current_pos.pose.pose.z
         if qx is None:
-            qx = self.current_pos.pose.orientation.x
+            qx = self.current_pos.pose.pose.orientation.x
         if qy is None:
-            qy = self.current_pos.pose.orientation.y
+            qy = self.current_pos.pose.pose.orientation.y
         if qz is None:
-            qz = self.current_pos.pose.orientation.z
+            qz = self.current_pos.pose.pose.orientation.z
         if qw is None:
-            qw = self.current_pos.pose.orientation.w
+            qw = self.current_pos.pose.pose.orientation.w
 
-        to_send = Waypoint()
+        to_send = Odometry()
         # Set variables from built position
-        to_send.pose.position.x = x
-        to_send.pose.position.y = y
-        to_send.pose.position.z = z
-        to_send.pose.orientation.x = qx
-        to_send.pose.orientation.y = qy
-        to_send.pose.orientation.z = qz
-        to_send.pose.orientation.w = qw
+        to_send.pose.pose.position.x = x
+        to_send.pose.pose.position.y = y
+        to_send.pose.pose.position.z = z
+        to_send.pose.pose.orientation.x = qx
+        to_send.pose.pose.orientation.y = qy
+        to_send.pose.pose.orientation.z = qz
+        to_send.pose.pose.orientation.w = qw
         # send goal to server to complete within timeout
         move_result = self.send_goal(to_send, timeout)
         return move_result
@@ -139,24 +139,24 @@ class goal_proxy(object):
             class_instance.relative_goal and then call this function
         '''
 
-        to_send = Waypoint()
+        to_send = Odometry()
 
         # Add move onto current position
-        to_send.pose.position.x = self.current_pos.pose.position.x + self.relative_goal.x
-        to_send.pose.position.y = self.current_pos.pose.position.y + self.relative_goal.y
-        to_send.pose.position.z = self.current_pos.pose.position.z + self.relative_goal.z
+        to_send.pose.pose.position.x = self.current_pos.pose.pose.position.x + x
+        to_send.pose.pose.position.y = self.current_pos.pose.pose.position.y + y
+        to_send.pose.pose.position.z = self.current_pos.pose.pose.position.z + z
 
         # This section adds the desired axis rotation to current position
         # convert from quaternion to numpy array
-        cur_rotation = gh.quat_to_euler(gh.quat_to_np(self.current_pos.pose.orientation))
+        cur_rotation = gh.quat_to_euler(gh.quat_to_np(self.current_pos.pose.pose.orientation))
         new_rotation = cur_rotation
-        new_rotation[0] = cur_rotation[0] + self.relative_goal.tx
-        new_rotation[1] = cur_rotation[1] + self.relative_goal.ty
-        new_rotation[2] = cur_rotation[2] + self.relative_goal.tz
+        new_rotation[0] = cur_rotation[0] + tx
+        new_rotation[1] = cur_rotation[1] + ty
+        new_rotation[2] = cur_rotation[2] + tz
         # convert from rotvec back into ROS quaternion message
         quat = gh.euler_to_quat(new_rotation)
         # set quaternion to send as the new quaternion
-        to_send.pose.orientation = mh.numpy_to_quat(quat)
+        to_send.pose.pose.orientation = mh.numpy_to_quat(quat)
         # send goal to server to complete within timeout
         move_result = self.send_goal(to_send, timeout)
         return move_result

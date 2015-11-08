@@ -3,23 +3,27 @@ project(goal_manager)
 
 find_package(catkin REQUIRED
 	nav_msgs
-	actionlib_msgs
+	genmsg 
+	actionlib_msgs 
+	actionlib
 	sub8_msgs
   	rostest
 	)
 
-catkin_python_setup()
-catkin_package()
-
 add_action_files(
-	  FILES
-	  current_goal.action
-	)
+	DIRECTORY 
+	action
+	FILES
+	current_goal.action
+)
+catkin_python_setup()
+generate_messages(DEPENDENCIES actionlib_msgs nav_msgs)
+
+catkin_package()
 
 catkin_package(CATKIN_DEPENDS 
 	actionlib_msgs 
 	nav_msgs
-	sub8_msgs
 	)
 
 if(CATKIN_ENABLE_TESTING)
