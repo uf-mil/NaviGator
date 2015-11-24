@@ -1,0 +1,8 @@
+#goal definition
+nav_msgs/Odometry waypoint
+---
+#result definition
+bool flag
+---
+#feedback
+int32[] sequence
