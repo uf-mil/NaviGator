@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(math_helpers)
+project(robotx_tools)
 find_package(catkin REQUIRED COMPONENTS rostest std_msgs)
 catkin_python_setup()
 catkin_package()

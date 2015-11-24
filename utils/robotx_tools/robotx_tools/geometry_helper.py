@@ -25,7 +25,6 @@ def compose_transformation(R, t):
     transformation[3, 3] = 1.0
     return transformation
 
-
 def quat_to_euler(q):
     ''' Approximate a quaternion as a euler rotation vector'''
 
@@ -39,3 +38,5 @@ def euler_to_quat(rotvec):
 
     quat = quaternion_from_euler(rotvec[0], rotvec[1], rotvec[2])
     return Quaternion(quat[0], quat[1], quat[2], quat[3])
+
+ 

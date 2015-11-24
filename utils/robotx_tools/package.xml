@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>math_helpers</name>
+  <name>robotx_tools</name>
   <version>1.0.0</version>
   <description>The math_helpers package</description>
   <maintainer email="zgoins@ufl.edu">Zach Goins</maintainer>
