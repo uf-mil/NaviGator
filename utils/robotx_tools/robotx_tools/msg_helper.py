@@ -9,5 +9,5 @@ from geometry_msgs.msg import Quaternion
 
 def ros_to_np_3D(msg):
 
-    xyz_array = numpy.array(([msg.x, msg.y. msg.z]))
+    xyz_array = np.array(([msg.x, msg.y, msg.z]))
     return xyz_array
