@@ -1,0 +1,6 @@
+192.168.1.101 - wamv
+192.168.1.2 - wamv_onboard_router
+192.168.1.20 - wamv_onshore_router
+192.168.1.201 - wamv_lidar
+192.168.1.111 - Marth (Jason)
+192.168.1.112 - zach
