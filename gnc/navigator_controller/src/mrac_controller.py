@@ -170,7 +170,7 @@ class MRAC_Controller:
         self.ang_vel = 0
         self.state = Odometry()
         # Subscribers
-        rospy.Subscriber("/waypoint", Point, self.set_waypoint)
+        rospy.Subscriber("/waypoint", PoseStamped, self.set_waypoint)
         rospy.Subscriber("/odom", Odometry, self.get_command)
         # Publishers
         self.wrench_pub = rospy.Publisher("/wrench/autonomous", WrenchStamped, queue_size=0)
@@ -185,8 +185,8 @@ class MRAC_Controller:
         Resets reference model to current state (i.e. resets trajectory generation).
 
         '''
-        self.p_des = np.array([msg.position.x, msg.position.y])
-        self.q_des = np.array([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w])
+        self.p_des = np.array([msg.pose.position.x, msg.pose.position.y])
+        self.q_des = np.array([msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w])
         self.traversal = npl.norm(self.p_des - self.position)
         self.p_ref = self.position
         self.v_ref = self.lin_vel
