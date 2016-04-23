@@ -81,10 +81,11 @@ Author: Jason Nezvadovitz
 
 '''
 from __future__ import division
-import rospy
 import numpy as np
 import numpy.linalg as npl
 import tf.transformations as trns
+
+import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, WrenchStamped, PoseStamped, Quaternion, Pose
 from std_msgs.msg import Header
@@ -93,8 +94,7 @@ class MRAC_Controller:
 
     def __init__(self):
         '''
-        Set hard-coded tunable parameters (gains and desired vehicle speed limit).
-        The boat model section's values are used
+        Set-up.
 
         '''
         #### TUNABLES
@@ -103,13 +103,17 @@ class MRAC_Controller:
         # Derivative gains, body frame
         self.kd_body = np.diag([650, 750, 750])
         # Disturbance adaptation rates, world frame
-        self.ki = np.array([0.1, 0.1, 0.1])
+        self.ki = np.array([0, 0, 0])
         # Drag adaptation rates, world frame
         self.kg = np.array([3, 3, 3, 3, 3])
         # Initial disturbance estimate
         self.dist_est = np.array([0, 0, 0])
         # Initial drag estimate
         self.drag_est = np.array([0, 0, 0, 0, 0])  # [d1 d2 Lc1 Lc2 Lr]
+        # Limits on disturbance estimate
+        self.dist_limit = np.array([200, 200, 200])
+        # Limits on drag estimate effort
+        self.drag_limit = np.array([200, 200, 200])
         # User-imposed speed limit
         self.vel_max_body_positive = np.array([1.5, 0.75, 0.5])  # [m/s, m/s, rad/s]
         self.vel_max_body_negative = np.array([0.75, 0.75, 0.5])  # [m/s, m/s, rad/s]
@@ -153,6 +157,8 @@ class MRAC_Controller:
         self.w_ref = 0
         self.a_ref = np.array([0, 0])
         self.aa_ref = 0
+        # Messages
+        self.last_odom = None
 
         #### ROS
         # Time since last controller call = 1/controller_call_frequency
@@ -163,13 +169,13 @@ class MRAC_Controller:
         self.lin_vel = np.zeros(2)
         self.ang_vel = 0
         self.state = Odometry()
-        # ayeeee subscrizzled
-        rospy.Subscriber("/set_desired_pose", Point, self.set_waypoint)
+        # Subscribers
+        rospy.Subscriber("/waypoint", Point, self.set_waypoint)
         rospy.Subscriber("/odom", Odometry, self.get_command)
-        self.last_odom = None
+        # Publishers
         self.wrench_pub = rospy.Publisher("/wrench/autonomous", WrenchStamped, queue_size=0)
         self.pose_ref_pub = rospy.Publisher("pose_ref", PoseStamped, queue_size=0)
-        self.des_pose_pub = rospy.Publisher("desired_pose_ref", PoseStamped, queue_size=0)
+        self.adaptation_pub = rospy.Publisher("adaptation", WrenchStamped, queue_size=0)
         rospy.spin()
 
 
@@ -179,9 +185,8 @@ class MRAC_Controller:
         Resets reference model to current state (i.e. resets trajectory generation).
 
         '''
-        # Set desired to user specified waypoint
-        self.p_des = np.array([msg.x, msg.y])
-        self.q_des = trns.quaternion_from_euler(0, 0, np.deg2rad(msg.z))
+        self.p_des = np.array([msg.position.x, msg.position.y])
+        self.q_des = np.array([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w])
         self.traversal = npl.norm(self.p_des - self.position)
         self.p_ref = self.position
         self.v_ref = self.lin_vel
@@ -189,17 +194,6 @@ class MRAC_Controller:
         self.w_ref = self.ang_vel
         self.a_ref = np.array([0, 0])
         self.aa_ref = 0
-
-        self.des_pose_pub.publish(PoseStamped(
-             header=Header(
-                 frame_id='/enu',
-             ),
-             pose=Pose(
-                 position=Point(msg.x, msg.y, 0),
-                 orientation=Quaternion(*self.q_des),
-             ),
-        ))
-
 
 
     def get_command(self, msg):
@@ -210,8 +204,7 @@ class MRAC_Controller:
         used for getting the wrench which is then later mapped elsewhere).
 
         '''
-
-        # compute timestep from interval between this message's stamp and last's
+        # Compute timestep from interval between this message's stamp and last's
         if self.last_odom is None:
             self.last_odom = msg
         else:
@@ -229,7 +222,8 @@ class MRAC_Controller:
         self.orientation = np.array([orientation.x, orientation.y, orientation.z, orientation.w])
 
         # Frame management quantities
-        R = trns.quaternion_matrix(self.orientation)[:3, :3]
+        R = np.eye(3)
+        R[:2, :2] = trns.quaternion_matrix(self.orientation)[:2, :2]
         y = trns.euler_from_quaternion(self.orientation)[2]
 
         # More ROS unpacking, converting body frame twist to world frame lin_vel and ang_vel
@@ -261,10 +255,13 @@ class MRAC_Controller:
         # wrench = PD + feedforward + I + adaptation
         if self.only_PD:
             wrench = (kp.dot(err)) + (kd.dot(errdot))
+            self.drag_effort = [0, 0, 0]
+            self.dist_est = [0, 0, 0]
         else:
-            wrench = (kp.dot(err)) + (kd.dot(errdot)) + inertial_feedforward + self.dist_est + (drag_regressor.dot(self.drag_est))
+            self.drag_effort = np.clip(drag_regressor.dot(self.drag_est), -self.drag_limit, self.drag_limit)
+            wrench = (kp.dot(err)) + (kd.dot(errdot)) + inertial_feedforward + self.dist_est + self.drag_effort
             # Update disturbance estimate, drag estimates
-            self.dist_est = self.dist_est + (self.ki * err * self.timestep)
+            self.dist_est = np.clip(self.dist_est + (self.ki * err * self.timestep), -self.dist_limit, self.dist_limit)
             self.drag_est = self.drag_est + (self.kg * (drag_regressor.T.dot(err + errdot)) * self.timestep)
 
         # Update model reference for the next call
@@ -280,12 +277,12 @@ class MRAC_Controller:
         # command = self.thruster_mapper(wrench, B_3dof)
 
         # Give wrench to ROS
-        to_send = WrenchStamped()
-        to_send.header.frame_id = "/base_link"
-        to_send.wrench.force.x = wrench_body[0]
-        to_send.wrench.force.y = wrench_body[1]
-        to_send.wrench.torque.z = wrench_body[2]
-        self.wrench_pub.publish(to_send)
+        wrench_msg = WrenchStamped()
+        wrench_msg.header.frame_id = "/base_link"
+        wrench_msg.wrench.force.x = wrench_body[0]
+        wrench_msg.wrench.force.y = wrench_body[1]
+        wrench_msg.wrench.torque.z = wrench_body[2]
+        self.wrench_pub.publish(wrench_msg)
 
         self.pose_ref_pub.publish(PoseStamped(
              header=Header(
@@ -297,6 +294,14 @@ class MRAC_Controller:
                  orientation=Quaternion(*self.q_ref),
              ),
         ))
+
+        # Publish adaptation (Y*theta) for plotting
+        adaptation_msg = WrenchStamped()
+        adaptation_msg.header.frame_id = "/base_link"
+        adaptation_msg.wrench.force.x = (self.dist_est + self.drag_effort)[0]
+        adaptation_msg.wrench.force.y = (self.dist_est + self.drag_effort)[1]
+        adaptation_msg.wrench.torque.z = (self.dist_est + self.drag_effort)[2]
+        self.adaptation_pub.publish(adaptation_msg)
 
 
     def increment_reference(self):
@@ -366,7 +371,7 @@ class MRAC_Controller:
         return command
 
 
-# ROS ME BABY
+# ROS
 if __name__ == '__main__':
 
     rospy.init_node("controller")
