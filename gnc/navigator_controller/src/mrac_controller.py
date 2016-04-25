@@ -59,6 +59,10 @@ Use get_command to receive the necessary wrench for this instant.
 That is, get_command publishes a ROS wrench message, and is fed
 the current odometry and timestamp.
 
+The controller subscribes to the topic /mrac_learn (ROS std bool
+message) to either start/continue learning (True) or hault
+learning (False). It initializes to False.
+
 ################################################# INTERNAL SEMANTICS
 
 *_des: "desired", refers to the end goal, the "waypoint" we are trying to hold at.
@@ -89,6 +93,9 @@ import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, WrenchStamped, PoseStamped, Quaternion, Pose
 from std_msgs.msg import Header
+from uf_common.msg import PoseTwistStamped
+from std_msgs.msg import Bool
+
 
 class MRAC_Controller:
 
@@ -99,13 +106,13 @@ class MRAC_Controller:
         '''
         #### TUNABLES
         # Proportional gains, body frame
-        self.kp_body = np.diag([600, 700, 700])
+        self.kp_body = np.diag([1000, 1000, 5600])
         # Derivative gains, body frame
-        self.kd_body = np.diag([650, 750, 750])
+        self.kd_body = np.diag([1200, 1200, 6000])
         # Disturbance adaptation rates, world frame
-        self.ki = np.array([0, 0, 0])
+        self.ki = np.array([0.1, 0.1, 0.1])
         # Drag adaptation rates, world frame
-        self.kg = np.array([3, 3, 3, 3, 3])
+        self.kg = 5 * np.array([1, 1, 1, 1, 1])
         # Initial disturbance estimate
         self.dist_est = np.array([0, 0, 0])
         # Initial drag estimate
@@ -113,7 +120,7 @@ class MRAC_Controller:
         # Limits on disturbance estimate
         self.dist_limit = np.array([200, 200, 200])
         # Limits on drag estimate effort
-        self.drag_limit = np.array([200, 200, 200])
+        self.drag_limit = np.array([1000, 1000, 1000])
         # User-imposed speed limit
         self.vel_max_body_positive = np.array([1.5, 0.75, 0.5])  # [m/s, m/s, rad/s]
         self.vel_max_body_negative = np.array([0.75, 0.75, 0.5])  # [m/s, m/s, rad/s]
@@ -121,6 +128,9 @@ class MRAC_Controller:
         self.heading_threshold = 500  # m
         # Only use PD controller
         self.only_PD = False
+        # Use external trajectory generator instead of internal reference generator
+        # Subscribes to /trajectory if using external, else just takes /waypoint for the end goal
+        self.use_external_tgen = False
 
         #### REFERENCE MODEL (note that this is not the adaptively estimated TRUE model; rather,
         #                     these parameters will govern the trajectory we want to achieve).
@@ -159,6 +169,7 @@ class MRAC_Controller:
         self.aa_ref = 0
         # Messages
         self.last_odom = None
+        self.learn = False
 
         #### ROS
         # Time since last controller call = 1/controller_call_frequency
@@ -170,13 +181,30 @@ class MRAC_Controller:
         self.ang_vel = 0
         self.state = Odometry()
         # Subscribers
-        rospy.Subscriber("/waypoint", PoseStamped, self.set_waypoint)
+        if self.use_external_tgen:
+            rospy.Subscriber("/trajectory", PoseTwistStamped, self.set_traj)
+        else:
+            rospy.Subscriber("/waypoint", PoseStamped, self.set_waypoint)
         rospy.Subscriber("/odom", Odometry, self.get_command)
+        rospy.Subscriber('/mrac_learn', Bool, self.toggle_learning)
         # Publishers
         self.wrench_pub = rospy.Publisher("/wrench/autonomous", WrenchStamped, queue_size=0)
         self.pose_ref_pub = rospy.Publisher("pose_ref", PoseStamped, queue_size=0)
         self.adaptation_pub = rospy.Publisher("adaptation", WrenchStamped, queue_size=0)
         rospy.spin()
+
+
+    def set_traj(self, msg):
+        '''
+        Sets instantaneous reference state.
+
+        '''
+        self.p_ref = np.array([msg.posetwist.pose.position.x, msg.posetwist.pose.position.y])
+        self.q_ref = np.array([msg.posetwist.pose.orientation.x, msg.posetwist.pose.orientation.y, msg.posetwist.pose.orientation.z, msg.posetwist.pose.orientation.w])
+        self.v_ref = np.array([msg.posetwist.twist.linear.x, msg.posetwist.twist.linear.y])
+        self.w_ref = msg.posetwist.twist.angular.z
+        self.a_ref = np.array([msg.posetwist.acceleration.linear.x, msg.posetwist.acceleration.linear.y])
+        self.aa_ref = msg.posetwist.acceleration.angular.z
 
 
     def set_waypoint(self, msg):
@@ -261,11 +289,13 @@ class MRAC_Controller:
             self.drag_effort = np.clip(drag_regressor.dot(self.drag_est), -self.drag_limit, self.drag_limit)
             wrench = (kp.dot(err)) + (kd.dot(errdot)) + inertial_feedforward + self.dist_est + self.drag_effort
             # Update disturbance estimate, drag estimates
-            self.dist_est = np.clip(self.dist_est + (self.ki * err * self.timestep), -self.dist_limit, self.dist_limit)
-            self.drag_est = self.drag_est + (self.kg * (drag_regressor.T.dot(err + errdot)) * self.timestep)
+            if self.learn:
+                self.dist_est = np.clip(self.dist_est + (self.ki * err * self.timestep), -self.dist_limit, self.dist_limit)
+                self.drag_est = self.drag_est + (self.kg * (drag_regressor.T.dot(err + errdot)) * self.timestep)
 
         # Update model reference for the next call
-        self.increment_reference()
+        if not self.use_external_tgen:
+            self.increment_reference()
 
         # convert wrench to body frame
         wrench_body = R.T.dot(wrench)
@@ -284,6 +314,7 @@ class MRAC_Controller:
         wrench_msg.wrench.torque.z = wrench_body[2]
         self.wrench_pub.publish(wrench_msg)
 
+        # Publish reference pose for examination
         self.pose_ref_pub.publish(PoseStamped(
              header=Header(
                  frame_id='/enu',
@@ -351,6 +382,20 @@ class MRAC_Controller:
         self.q_ref = trns.quaternion_from_euler(0, 0, y_ref + (self.w_ref * self.timestep))
         self.v_ref = self.v_ref + (self.a_ref * self.timestep)
         self.w_ref = self.w_ref + (self.aa_ref * self.timestep)
+
+
+    def toggle_learning(self, bool_msg):
+        '''
+        Callback for the /mrac_learn topic. Sets
+        self.learn to True or False depending
+        on the Bool message.
+
+        '''
+        self.learn = bool_msg.data
+        if self.learn:
+            print("MRAC controller is learning.")
+        else:
+            print("MRAC controller haulted learning.")
 
 
     def thruster_mapper(self, wrench, B):
