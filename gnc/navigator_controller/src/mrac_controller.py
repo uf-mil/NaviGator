@@ -130,7 +130,7 @@ class MRAC_Controller:
         self.only_PD = False
         # Use external trajectory generator instead of internal reference generator
         # Subscribes to /trajectory if using external, else just takes /waypoint for the end goal
-        self.use_external_tgen = False
+        self.use_external_tgen = True
 
         #### REFERENCE MODEL (note that this is not the adaptively estimated TRUE model; rather,
         #                     these parameters will govern the trajectory we want to achieve).
