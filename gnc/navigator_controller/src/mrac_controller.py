@@ -122,8 +122,8 @@ class MRAC_Controller:
         # Limits on drag estimate effort
         self.drag_limit = np.array([1000, 1000, 1000])
         # User-imposed speed limit
-        self.vel_max_body_positive = np.array([1.5, 0.75, 0.5])  # [m/s, m/s, rad/s]
-        self.vel_max_body_negative = np.array([0.75, 0.75, 0.5])  # [m/s, m/s, rad/s]
+        self.vel_max_body_positive = np.array([1.1,  0.45, 0.19])  # [m/s, m/s, rad/s]
+        self.vel_max_body_negative = np.array([0.68, 0.45, 0.19])  # [m/s, m/s, rad/s]
         # "Smart heading" threshold
         self.heading_threshold = 500  # m
         # Only use PD controller
@@ -134,8 +134,8 @@ class MRAC_Controller:
 
         #### REFERENCE MODEL (note that this is not the adaptively estimated TRUE model; rather,
         #                     these parameters will govern the trajectory we want to achieve).
-        self.mass_ref = 300  # kg
-        self.inertia_ref = 300  # kg*m^2
+        self.mass_ref = 400  # kg, determined to be larger than boat in practice due to water mass
+        self.inertia_ref = 400  # kg*m^2, determined to be larger than boat in practice due to water mass
         self.thrust_max = 220  # N
         self.thruster_positions = np.array([[-1.9000,  1.0000, -0.0123],
                                             [-1.9000, -1.0000, -0.0123],
