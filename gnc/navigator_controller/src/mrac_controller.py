@@ -197,14 +197,19 @@ class MRAC_Controller:
     def set_traj(self, msg):
         '''
         Sets instantaneous reference state.
+        Convert twist to world frame for controller math.
 
         '''
         self.p_ref = np.array([msg.posetwist.pose.position.x, msg.posetwist.pose.position.y])
         self.q_ref = np.array([msg.posetwist.pose.orientation.x, msg.posetwist.pose.orientation.y, msg.posetwist.pose.orientation.z, msg.posetwist.pose.orientation.w])
-        self.v_ref = np.array([msg.posetwist.twist.linear.x, msg.posetwist.twist.linear.y])
-        self.w_ref = msg.posetwist.twist.angular.z
-        self.a_ref = np.array([msg.posetwist.acceleration.linear.x, msg.posetwist.acceleration.linear.y])
-        self.aa_ref = msg.posetwist.acceleration.angular.z
+        
+        R = trns.quaternion_matrix(self.q_ref)[:3, :3]
+
+        self.v_ref = R.dot(np.array([msg.posetwist.twist.linear.x, msg.posetwist.twist.linear.y, msg.posetwist.twist.linear.z]))[:2]
+        self.w_ref = R.dot(np.array([msg.posetwist.twist.angular.x, msg.posetwist.twist.angular.y, msg.posetwist.twist.angular.z]))[2]
+        
+        self.a_ref = R.dot(np.array([msg.posetwist.acceleration.linear.x, msg.posetwist.acceleration.linear.y, msg.posetwist.acceleration.linear.z]))[:2]
+        self.aa_ref = R.dot(np.array([msg.posetwist.acceleration.angular.x, msg.posetwist.acceleration.angular.y, msg.posetwist.acceleration.angular.z]))[2]
 
 
     def set_waypoint(self, msg):
@@ -372,7 +377,12 @@ class MRAC_Controller:
 
         # Use model drag to find drag force on virtual boat
         twist_body = R_ref.T.dot(np.concatenate((self.v_ref, [self.w_ref])))
-        D_body = np.array([p if v > 0 else n for p, n, v in zip(self.D_body_positive, self.D_body_negative, twist_body)])
+        D_body = np.zeros_like(twist_body)
+        for i, v in enumerate(twist_body):
+            if v >= 0:
+                D_body[i] = self.D_body_positive[i]
+            else:
+                D_body[i] = self.D_body_negative[i]
         drag_ref = R_ref.dot(D_body * twist_body * abs(twist_body))
 
         # Step forward the dynamics of the virtual boat
