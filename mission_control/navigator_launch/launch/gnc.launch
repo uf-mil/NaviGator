@@ -46,7 +46,28 @@
 
     <node name="wrench_arbiter" pkg="navigator_msg_multiplexer" type="wrench_arbiter.py"/>
 
-    <node name="pose_controller" pkg="navigator_controller" type="mrac_controller.py"/>
+    <node name="pose_controller" pkg="navigator_controller" type="mrac_controller.py">
+        <!-- All paramters are given as (x,y,z) for euler and (x,y,z,w) for quaternion -->
+        <rosparam param="p_gains_body">[1000, 1000, 5600]</rosparam>
+        <rosparam param="d_gains_body">[1200, 1200, 6000]</rosparam>
+        <rosparam param="i_gains_body">[0.1, 0.1, 0.1]</rosparam>
+        <rosparam param="drag_adapt_rates">5</rosparam>
+        <rosparam param="disturbance_estimate">[0, 0, 0]</rosparam>
+        <rosparam param="drag_estimate">-[0, 0, 0, 0, 0]</rosparam>
+        <rosparam param="disturbance_limits">-[200, 200, 200]</rosparam>
+        <rosparam param="drag_limit">[1000, 1000, 1000]</rosparam>
+        <rosparam param="max_positive_velocity">[1.1,  0.45, 0.19]</rosparam><!-- map 220 newtons to 300 effort units -->
+        <rosparam param="max_negative_velocity">[0.68, 0.45, 0.19]</rosparam>
+        <rosparam param="heading_threshold">500</rosparam>
+        <rosparam param="PD_only">False</rosparam>
+        <rosparam param="external_tgen">True</rosparam>
+        <rosparam param="mass_reference">400</rosparam>
+        <rosparam param="inertia_reference">400</rosparam>
+        <rosparam param="max_thrust">220</rosparam>
+    </node>
+
+    <!-- can be type="mrac_controller.py" OR type="run_nn_controller" if you have that dependency
+    <https://github.com/jnez71/neural_control>-->
 
     <node if="$(arg rc)" pkg="navigator_joystick_control" type="navigator_joystick.py" name="joystick_wrench">
         <param name="force_scale" value="600" type="double"/>
@@ -64,6 +85,21 @@
     <node pkg="tf" type="static_transform_publisher" name="forward_camera_tf" args=".6096 -.254 .762  0 0 0 1  /base_link /camera 100" />
 
     <node name="move_helper" pkg="navigator_tools" type="move_helper.py"/>
+
+    <node pkg="kill_handling" type="kill_master" name="kill_master"/>
+  <node pkg="c3_trajectory_generator" type="c3_trajectory_generator" name="c3_trajectory_generator" output="screen">
+    <rosparam>
+        <!-- Degraded trajectory -->
+        fixed_frame: /enu
+        body_frame: /base_link
+        vmin_b: [-0.68, -0.45, -1, -1, -1, -0.19]
+        vmax_b: [  1.1,  0.45,  1,  1,  1,  0.19]
+        amin_b: [-0.34, -0.15, -1, -1, -1, -0.04]
+        amax_b: [ 0.53,  0.15,  1,  1,  1,  0.04]
+        arevoffset_b: [0.0, 0, 0]
+        umax_b: [1, 1, 1, 1, 1, 1]
+      </rosparam>
+    </node>
 
 
 </launch>
