@@ -6,7 +6,7 @@
 
 #Running
 * Start a ros master node `roscore`
-* Start a node to communicate with arduino and turn it into ros stuff `rosrun rosserial_python serial_node.py /dev/ttyACM0`[^1]
+* Start a node to communicate with arduino and turn it into ros stuff `rosrun rosserial_python serial_node.py /dev/USBPATH` ex: `rosrun rosserial_python serial_node.py /dev/ttyACM0`
 * Use `rostopic list` to see if the subscribers and publishers you created show up
 
 #Testing
@@ -19,4 +19,3 @@
 * To change board, edit text after BOARD within generate_arduino_firmware function
 * To change USB port path, edit text after PORT within generate_arduino_firmware function
 
-[^1]: Change /dev/ttyACM0 to the correct path for the USB the arduino is connected to
