@@ -18,4 +18,13 @@
 * open firmware/CMakeLists.txt
 * To change board, edit text after BOARD within generate_arduino_firmware function
 * To change USB port path, edit text after PORT within generate_arduino_firmware function
+ex:
+```
+generate_arduino_firmware(arduino
+  SRCS shooter.cpp ${ROS_LIB_DIR}/time.cpp
+  BOARD uno
+  PORT /dev/ttyACM0
+)
+```
+
 
