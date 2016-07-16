@@ -136,7 +136,6 @@ class Comms
     {
       nh.initNode();
       nh.subscribe(sub);
-	Serial.begin(9600);
       //nh.advertise(chatter);   
     }
     void run()
