@@ -120,13 +120,13 @@ class Comms
       else if (s == "flyoff")
         Shooter::off();
       else if (s == "feedon")
-        Feeder::on()
+        Feeder::on();
       else if (s == "feedoff")
-        Feeder::off()
+        Feeder::off();
       else if (s = "ledon")
         digitalWrite(13,HIGH)
-      else if (s == "ledoff")
-        digitalWrite(13,LOW)
+      else if (s == "ledoff");
+        digitalWrite(13,LOW);
     }
   public:
     Comms() :
