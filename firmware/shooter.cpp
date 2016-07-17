@@ -115,26 +115,18 @@ class Comms
     static void messageCallback(const std_msgs::String& str_msg)
     {
       String s = str_msg.data;
-      switch (s)
-      {
-        case "flyon":
-          Shooter.on();
-          break;
-        case "flyoff":
-          Shooter.off();
-          break;
-        case "feedon":
-          Feeder.on();
-          break;
-        case "feedoff":
-          Feeder.off();
-          break;
-        case "ledon":
-          digitalWrite(13,HIGH);
-          break;
-        case "ledoff":
-          digitalWrite(13,LOW);
-      }
+      if (s == "flyon")
+        Shooter.on();
+      else if (s == "flyoff")
+        Shooter.off();
+      else if (s == "feedon")
+        Feeder.on()
+      else if (s == "feedoff")
+        Feeder.off()
+      else if (s = "ledon")
+        digitalWrite(13,HIGH)
+      else if (s == "ledoff")
+        digitalWrite(13,LOW)
     }
   public:
     Comms() :
