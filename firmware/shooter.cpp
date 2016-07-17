@@ -124,7 +124,7 @@ class Comms
       else if (s == "feedoff")
         Feeder::off();
       else if (s = "ledon")
-        digitalWrite(13,HIGH)
+        digitalWrite(13,HIGH);
       else if (s == "ledoff")
         digitalWrite(13,LOW);
     }
