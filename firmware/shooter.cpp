@@ -112,24 +112,29 @@ class Comms
     //ros::Publisher chatter;
     ros::Subscriber<std_msgs::String> sub;
 
-    static const int ON_CHAR = 105; //i
-    static const int OFF_CHAR = 111; //o
-    static const int FEED_ON_CHAR = 102; //f
-    static const int FEED_OFF_CHAR = 115; //s
-    static const int FEED_REVERSE_CHAR = 114; //r
-    
-    static const String FLY_ON_STR = "flyon"
-    static const String FLY_OFF_STR = "flyoff"
-    static const String FEED_ON_STR = "feedon"
-    static const String FEED_OFF_STR = "feedoff"
-    static const String LED_ON_STR = "ledon"
-    static const String LED_OFF_STR = "ledoff"
-
     static void messageCallback(const std_msgs::String& str_msg)
     {
       String s = str_msg.data;
-      if (s == "i") digitalWrite(13,HIGH);
-      else if (s == "o") digitalWrite(13,LOW);
+      switch (s)
+      {
+        case "flyon":
+          Shooter.on();
+          break;
+        case "flyoff":
+          Shooter.off();
+          break;
+        case "feedon":
+          Feeder.on();
+          break;
+        case "feedoff":
+          Feeder.off();
+          break;
+        case "ledon":
+          digitalWrite(13,HIGH);
+          break;
+        case "ledoff":
+          digitalWrite(13,LOW);
+      }
     }
   public:
     Comms() :
