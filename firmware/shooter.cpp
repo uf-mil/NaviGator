@@ -117,6 +117,13 @@ class Comms
     static const int FEED_ON_CHAR = 102; //f
     static const int FEED_OFF_CHAR = 115; //s
     static const int FEED_REVERSE_CHAR = 114; //r
+    
+    static const String FLY_ON_STR = "flyon"
+    static const String FLY_OFF_STR = "flyoff"
+    static const String FEED_ON_STR = "feedon"
+    static const String FEED_OFF_STR = "feedoff"
+    static const String LED_ON_STR = "ledon"
+    static const String LED_OFF_STR = "ledoff"
 
     static void messageCallback(const std_msgs::String& str_msg)
     {
