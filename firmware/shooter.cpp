@@ -116,13 +116,13 @@ class Comms
     {
       String s = str_msg.data;
       if (s == "flyon")
-        Shooter.on();
+        Shooter::on();
       else if (s == "flyoff")
-        Shooter.off();
+        Shooter::off();
       else if (s == "feedon")
-        Feeder.on()
+        Feeder::on()
       else if (s == "feedoff")
-        Feeder.off()
+        Feeder::off()
       else if (s = "ledon")
         digitalWrite(13,HIGH)
       else if (s == "ledoff")
