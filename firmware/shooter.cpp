@@ -6,6 +6,9 @@
 
 #include <Servo.h>
 
+const int SHOOTER_PIN = 5;
+const int FEEDER_MOTOR_PIN = 6;
+
 class Victor
 {
   private:
@@ -68,6 +71,7 @@ class Victor
       }
     }
 };
+Victor shooter(SHOOTER_PIN);
 
 class Feeder
 {
@@ -75,11 +79,10 @@ class Feeder
 
   public:
     Victor motor;
-    Feeder (int motorPin)
+    Feeder (int motorPin) :
+      motor(motorPin)
     {
-      motor(motorPin);
-      set(1500);
-      goal = 1500;
+
     }
     void init()
     {
@@ -90,13 +93,12 @@ class Feeder
       
     }
 };
+Feeder feeder(FEEDER_MOTOR_PIN);
 
 class Comms
 {
   private:
     //ROS
-    Feeder feeder;
-    Victor shooter;
     ros::NodeHandle nh;
     std_msgs::String str_msg;
     //ros::Publisher chatter;
@@ -106,9 +108,9 @@ class Comms
     {
       String s = str_msg.data;
       if (s == "flyon")
-        Shooter.on();
+        shooter.on();
       else if (s == "flyoff")
-        Shooter.off();
+        shooter.off();
       else if (s == "feedon")
         feeder.motor.on();
       else if (s == "feedoff")
@@ -122,8 +124,6 @@ class Comms
     }
   public:
     Comms() :
-      shooter(5),
-      feeder(6),
       str_msg(),
       sub("shooter_control",&messageCallback)
       //chatter("chatter", &str_msg)
@@ -132,8 +132,6 @@ class Comms
     }
     void init()
     {
-      shooter.init();
-      feeder.init();
       nh.initNode();
       nh.subscribe(sub);
       //nh.advertise(chatter);   
@@ -141,19 +139,21 @@ class Comms
     void run()
     {
       nh.spinOnce();
-      shooter.run();
-      feeder.run();
     }
 };
 
 Comms com;
 void setup()
 {
+  shooter.init();
+  feeder.init();
   com.init();
 }
 
 void loop()
 {
   com.run();
+  shooter.run();
+  feeder.run();
   delay(100);
 }
