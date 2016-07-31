@@ -63,6 +63,7 @@ class Victor
       }
     }
 }
+
 Victor Shooter;
 
 class Feeder
@@ -70,54 +71,24 @@ class Feeder
   private:
 
   public:
-    const int pin = 6;
     Victor motor;
-    static int goal;
-    static int cur;
-
-    Feeder
-	{
-		motor(6);
-      controller.attach(pin);
+    Feeder (int motorPin)
+    {
+      motor(motorPin);
       set(1500);
       goal = 1500;
     }
-    static void set(int x)
+    void set(int x)
     {
       controller.writeMicroseconds(x);
       cur = x;
     }
-    static void on()
-    {
-      goal = 2000;
-    }
-    static void off()
-    {
-      goal = 1500;
-    }
-    static void reverse()
-    {
-      goal = 1000;
-    }
     static void run()
     {
-      if (cur != goal)
-      {
-        if (goal == 1500) set(1500);
-        else if (goal < 1500)
-        {
-          set(cur - 100);
-        }
-        else if (goal > 1500)
-        {
-          set(cur + 100);
-        }
-      }
+      
     }
 };
-int Feeder::goal = 0;
-Servo Feeder::controller = Servo();
-int Feeder::cur = 0;
+Feeder feeder;
 
 class Comms
 {
@@ -136,9 +107,11 @@ class Comms
       else if (s == "flyoff")
         Shooter.off();
       else if (s == "feedon")
-        Feeder::on();
+        feeder.motor.on();
       else if (s == "feedoff")
-        Feeder::off();
+        feeder.motor.off();
+      else if (s == "feedreverse")
+        feeder.motor.reverse();
       else if (s == "ledon")
         digitalWrite(13,HIGH);
       else if (s == "ledoff")
@@ -168,10 +141,9 @@ Comms com;
 void setup()
 {
   Shooter = Victor(5);
+  feeder = Feeder(6);
   pinMode(13,OUTPUT);
   com.init();
-  Shooter::init();
-  Feeder::init();
 }
 
 void loop()
