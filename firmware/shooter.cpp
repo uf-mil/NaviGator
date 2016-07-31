@@ -12,6 +12,7 @@ class Victor
     Servo controller;
     int goal;
     int cur;
+    int pin;
     //Internal set command to write to controller PWM
     void _set(int s)
     {
@@ -19,11 +20,15 @@ class Victor
       cur = x;
     }
   public:
-    Victor(int pin)
+    Victor(int p)
     {
+      pin = p;
       controller = Servo();
-      controller.attach(pin);
       goal = 1500;
+    }
+    void init()
+    {
+      controller.attach(pin);
       _set(goal);
     }
     void set(int speed)
@@ -62,9 +67,7 @@ class Victor
         }
       }
     }
-}
-
-Victor Shooter;
+};
 
 class Feeder
 {
@@ -78,22 +81,22 @@ class Feeder
       set(1500);
       goal = 1500;
     }
-    void set(int x)
+    void init()
     {
-      controller.writeMicroseconds(x);
-      cur = x;
+      motor.init();
     }
-    static void run()
+    void run()
     {
       
     }
 };
-Feeder feeder;
 
 class Comms
 {
   private:
     //ROS
+    Feeder feeder;
+    Victor shooter;
     ros::NodeHandle nh;
     std_msgs::String str_msg;
     //ros::Publisher chatter;
@@ -119,14 +122,18 @@ class Comms
     }
   public:
     Comms() :
+      shooter(5),
+      feeder(6),
       str_msg(),
       sub("shooter_control",&messageCallback)
       //chatter("chatter", &str_msg)
     {
-
+      pinMode(13,OUTPUT);
     }
     void init()
     {
+      shooter.init();
+      feeder.init();
       nh.initNode();
       nh.subscribe(sub);
       //nh.advertise(chatter);   
@@ -134,22 +141,19 @@ class Comms
     void run()
     {
       nh.spinOnce();
+      shooter.run();
+      feeder.run();
     }
 };
 
 Comms com;
 void setup()
 {
-  Shooter = Victor(5);
-  feeder = Feeder(6);
-  pinMode(13,OUTPUT);
   com.init();
 }
 
 void loop()
 {
   com.run();
-  Shooter.run();
-  Feeder::run();
   delay(100);
 }
