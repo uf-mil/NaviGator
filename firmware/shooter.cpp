@@ -90,7 +90,7 @@ class Feeder
     }
     void run()
     {
-      
+      motor.run();
     }
 };
 Feeder feeder(FEEDER_MOTOR_PIN);
