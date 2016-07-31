@@ -19,8 +19,8 @@ class Victor
     //Internal set command to write to controller PWM
     void _set(int s)
     {
-      controller.writeMicroseconds(x);
-      cur = x;
+      controller.writeMicroseconds(s);
+      cur = s;
     }
   public:
     Victor(int p)
