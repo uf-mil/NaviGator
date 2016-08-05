@@ -5,14 +5,29 @@
 * To build arduino files run `catkin_make navigator_shooter_firmware_arduino`
 * To upload the sketch to the arduino run `catkin_make navigator_shooter_firmware_arduino-upload`
 
-#Running
+#Running / Testing
 * Start a ros master node `roscore`
 * Start a node to communicate with arduino and turn it into ros stuff `rosrun rosserial_python serial_node.py /dev/USBPATH` ex: `rosrun rosserial_python serial_node.py /dev/ttyACM0`
 * Use `rostopic list` to see if the subscribers and publishers you created show up
+* Run the command line testing script `rosrun navigator_shooter shooter_control.py`
+* Type in one of the valid commands and press enter to test it 
 
-#Testing
-* To see incoming data use `rostopic echo TOPIC` where TOPIC is the topic you are publishing to ex: `rostopic echo chatter`
-* To send data to the arduino use `rostopic pub /TOPIC MSGTYPE MSGDATA -1` ex: `rostopic pub /shooter_control std_msgs/Int8 9 -1`
+#Messages
+* The arduino listens on the topic `shooter_control` for std string messages
+* The following strings will result in behavior on the shooter:
+
+Command | Behavior 
+--- | --- |
+shoot | Shoots all 4 balls using timing
+cancel | cancels any command, turning off all motors
+flyon | manually turns on the fly wheel motors
+flyoff | manually turns off the fly wheel motors
+feedon | manually turns on the feeder motor
+feedoff | manually turns off the feeder motor
+ledon | turns on the built in LED on pin 13 of the arduino for testing
+ledon | turns off the built in LED on pin 13 of the arduino for testing
+
+
 
 
 #Switching USB/Board type
