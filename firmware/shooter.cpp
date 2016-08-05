@@ -7,7 +7,7 @@
 #include <Servo.h>
 
 const int SHOOTER_PIN = 5;
-const int FEEDER_MOTOR_PIN = 6;
+const int FEEDER_MOTOR_PIN = 2;
 
 class Victor
 {
