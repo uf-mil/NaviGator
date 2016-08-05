@@ -1,4 +1,5 @@
-#Building
+#Install/Build
+* Install rosserial, rosserial-python and rosserial-arduino `sudo apt-get ros-indigo-rosserial install ros-indigo-rosserial-python ros-indigo-rosserial-arduino`
 * clone project into catkin workspace/src
 * cd back to catkin workspace
 * To build arduino files run `catkin_make navigator_shooter_firmware_arduino`
