@@ -9,7 +9,7 @@ class ShooterController:
         rospy.init_node("shooter_controller")
         self.rate = rospy.Rate(10)
     def control(self):
-        pub = rospy.Publisher("shooter_control", String,queue_size=5)
+        pub = rospy.Publisher("/shooter/control", String,queue_size=5)
         while not rospy.is_shutdown():
             sys.stdout.write("Enter comand: ")
             command = sys.stdin.readline().strip()

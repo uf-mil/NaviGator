@@ -101,7 +101,7 @@ class AutoController
     static const unsigned long SPIN_UP_TIME = 3000; //Constant for time to spin up flywheels before feeding balls in
     static const unsigned long SHOOT_TIME = 5000; //Time to shoot all 4 balls once after they start being fed in
     static const unsigned long TOTAL_TIME = SPIN_UP_TIME + SHOOT_TIME;
-    static const int FEED_SPEED = 50;
+    static const int FEED_SPEED = 50; //speed (out of 100) to set feeder motor to when feeding balls
 
     unsigned long start_shoot_time;
     bool auto_shoot;
@@ -169,7 +169,7 @@ class Comms
   public:
     Comms() :
       str_msg(),
-      sub("shooter_control",&messageCallback)
+      sub("/shooter/control",&messageCallback)
       //chatter("chatter", &str_msg)
     {
       pinMode(13,OUTPUT);

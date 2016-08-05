@@ -13,7 +13,7 @@
 * Type in one of the valid commands and press enter to test it 
 
 #Messages
-* The arduino listens on the topic `shooter_control` for std string messages
+* The arduino listens on the topic `/shooter/control` for `std_msgs/String` messages
 * The following strings will result in behavior on the shooter:
 
 Command | Behavior 
