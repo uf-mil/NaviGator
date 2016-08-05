@@ -95,6 +95,46 @@ class Feeder
 };
 Feeder feeder(FEEDER_MOTOR_PIN);
 
+class AutoController
+{
+  private:
+    static const unsigned long SPIN_UP_TIME = 3000; //Constant for time to spin up flywheels before feeding balls in
+    static const unsigned long SHOOT_TIME = 5000; //Time to shoot all 4 balls once after they start being fed in
+    static const unsigned long TOTAL_TIME = SPIN_UP_TIME + SHOOT_TIME;
+    static const int FEED_SPEED = 50;
+
+    unsigned long start_shoot_time;
+    bool auto_shoot;
+  public:
+		AutoController()
+		{
+			start_shoot_time = 0;
+			auto_shoot = false;
+		}
+		void shoot()
+		{
+			auto_shoot = true;
+			start_shoot_time = millis();
+		}
+		void cancel()
+		{
+			feeder.motor.off();
+			shooter.off();
+			auto_shoot = false;
+		}
+		void run()
+		{
+			if (auto_shoot)
+			{
+				unsigned long time_since_start = millis() - start_shoot_time;
+				if (time_since_start < SPIN_UP_TIME) feeder.motor.set(FEED_SPEED);
+				else if (time_since_start > SPIN_UP_TIME && time_since_start < TOTAL_TIME) shooter.on();
+				else if (time_since_start > TOTAL_TIME) cancel();
+			}
+		}	
+};
+AutoController autoController;
+
 class Comms
 {
   private:
@@ -117,6 +157,10 @@ class Comms
         feeder.motor.off();
       else if (s == "feedreverse")
         feeder.motor.reverse();
+      else if (s == "shoot")
+        autoController.shoot();
+      else if (s == "cancel")
+        autoController.cancel();
       else if (s == "ledon")
         digitalWrite(13,HIGH);
       else if (s == "ledoff")
@@ -153,6 +197,7 @@ void setup()
 void loop()
 {
   com.run();
+  autoController.run();
   shooter.run();
   feeder.run();
   delay(100);
