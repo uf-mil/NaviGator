@@ -6,8 +6,8 @@
 
 #include <Servo.h>
 
-const int SHOOTER_PIN = 5;
-const int FEEDER_MOTOR_PIN = 2;
+const int SHOOTER_PIN = 3;
+const int FEEDER_MOTOR_PIN = 5;
 
 class Victor
 {
@@ -16,6 +16,7 @@ class Victor
     int goal;
     int cur;
     int pin;
+    bool reversed;
     //Internal set command to write to controller PWM
     void _set(int s)
     {
@@ -28,6 +29,7 @@ class Victor
       pin = p;
       controller = Servo();
       goal = 1500;
+      reversed = false;
     }
     void init()
     {
@@ -36,11 +38,13 @@ class Victor
     }
     void set(int speed)
     {
-      goal = map(speed,-100,100, 1000,2000);
+      if (reversed) goal = map(speed,-100,100,2000,1000);
+      else goal = map(speed,-100,100, 1000,2000);
     }
     int get()
     {
-      return map(cur,1000,2000,-100,100);
+      if (reversed) return map(cur,1000,2000,100,-100);
+      else return map(cur,1000,2000,-100,100);
     }
     void off()
     {
@@ -53,6 +57,10 @@ class Victor
     void reverse()
     {
       set(-100);
+    }
+    void setReversed(bool rev)
+    {
+      reversed = rev;
     }
     //Should be called in each loop so PWM slowly ramps up, doesn't work otherwise
     void run()
@@ -72,17 +80,78 @@ class Victor
     }
 };
 Victor shooter(SHOOTER_PIN);
+//shooter.setReversed(true);
+
+
+class Pololu
+{
+    private:
+      int inA_pin;
+      int inB_pin;
+      int pwm_pin;
+      int speed;
+      Servo controller;
+   public:
+      Pololu(int a, int b, int pwm)
+      {
+        inA_pin = a;
+        inB_pin = b;
+        pwm_pin = pwm;
+        controller = Servo();
+      }
+     void init()
+     {
+       pinMode(inA_pin,OUTPUT);
+       pinMode(inB_pin,OUTPUT);
+       controller.attach(pwm_pin);
+     }
+     void set(int s)
+    {
+      if (s == 0)
+      {
+        digitalWrite(inA_pin,LOW);
+        digitalWrite(inB_pin,LOW);
+        controller.writeMicroseconds(1500);
+      }
+      if(s < 0)
+      {
+        digitalWrite(inA_pin,HIGH);
+        digitalWrite(inB_pin,LOW);
+        //do direction stuff
+        controller.writeMicroseconds(map(s,-100,0,1000,2000));
+      } else if (s > 0)
+      {
+        digitalWrite(inA_pin,LOW);
+        digitalWrite(inB_pin,HIGH);
+        controller.writeMicroseconds(map(s,0,100,1000,2000));
+        
+      }
+    }
+void off()
+{
+set(0);
+}
+void on()
+{
+set(100);
+}
+void reverse()
+{
+set(-100);
+}
+};
+
 
 class Feeder
 {
   private:
 
   public:
-    Victor motor;
-    Feeder (int motorPin) :
-      motor(motorPin)
+    Pololu motor;
+    Feeder (int a,int b, int pwm) :
+      motor(a,b,pwm)
     {
-
+  
     }
     void init()
     {
@@ -90,16 +159,16 @@ class Feeder
     }
     void run()
     {
-      motor.run();
+      //motor.run();
     }
 };
-Feeder feeder(FEEDER_MOTOR_PIN);
+Feeder feeder(8,9,5);
 
 class AutoController
 {
   private:
-    static const unsigned long SPIN_UP_TIME = 3000; //Constant for time to spin up flywheels before feeding balls in
-    static const unsigned long SHOOT_TIME = 5000; //Time to shoot all 4 balls once after they start being fed in
+    static const unsigned long SPIN_UP_TIME = 1000; //Constant for time to spin up flywheels before feeding balls in
+    static const unsigned long SHOOT_TIME = 12000; //Time to shoot all 4 balls once after they start being fed in
     static const unsigned long TOTAL_TIME = SPIN_UP_TIME + SHOOT_TIME;
     static const int FEED_SPEED = 50; //speed (out of 100) to set feeder motor to when feeding balls
 
@@ -127,8 +196,8 @@ class AutoController
 			if (auto_shoot)
 			{
 				unsigned long time_since_start = millis() - start_shoot_time;
-				if (time_since_start < SPIN_UP_TIME) feeder.motor.set(FEED_SPEED);
-				else if (time_since_start > SPIN_UP_TIME && time_since_start < TOTAL_TIME) shooter.on();
+				if (time_since_start < SPIN_UP_TIME) shooter.on();
+				else if (time_since_start > SPIN_UP_TIME && time_since_start < TOTAL_TIME) feeder.motor.on(); //feeder.motor.set(FEED_SPEED);
 				else if (time_since_start > TOTAL_TIME) cancel();
 			}
 		}	
@@ -189,6 +258,7 @@ class Comms
 Comms com;
 void setup()
 {
+  shooter.setReversed(true);
   shooter.init();
   feeder.init();
   com.init();
