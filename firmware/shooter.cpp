@@ -7,9 +7,51 @@
 #include <Servo.h>
 
 const int SHOOTER_PIN = 3;
-const int FEEDER_MOTOR_PIN = 5;
+const int FEEDER_A_PIN = 8;
+const int FEEDER_B_PIN = 9;
+const int FEEDER_PWM_PIN = 5;
 
-class Victor
+class SpeedController
+{
+  protected:
+    bool reversed;
+    virtual void _set(int s);
+    virtual int _get();
+    SpeedController()
+    {
+      reversed = false;
+    }
+  public:
+    void set(int s)
+    {
+      if (reversed) _set(-s);
+      else _set(s);
+    }
+    int get()
+    {
+      if (reversed) return -_get();
+      else return _get();
+    }
+    void setReversed(bool r)
+    {
+      reversed = r;
+    }
+    void on()
+    {
+      set(100);
+    }
+    void off()
+    {
+      set(0);
+    }
+    void reverse()
+    {
+      set(-100);
+    }
+};
+
+//Class for the Victor 883 speed controller used to control the shooter motors
+class Victor : public SpeedController
 {
   private:
     Servo controller;
@@ -20,8 +62,11 @@ class Victor
     //Internal set command to write to controller PWM
     void _set(int s)
     {
-      controller.writeMicroseconds(s);
-      cur = s;
+      goal = map(s,-100,100, 1000,2000);
+    }
+    int _get()
+    {
+      return map(cur,1000,2000,-100,100);
     }
   public:
     Victor(int p)
@@ -29,140 +74,82 @@ class Victor
       pin = p;
       controller = Servo();
       goal = 1500;
-      reversed = false;
+      cur = goal;
     }
     void init()
     {
       controller.attach(pin);
-      _set(goal);
-    }
-    void set(int speed)
-    {
-      if (reversed) goal = map(speed,-100,100,2000,1000);
-      else goal = map(speed,-100,100, 1000,2000);
-    }
-    int get()
-    {
-      if (reversed) return map(cur,1000,2000,100,-100);
-      else return map(cur,1000,2000,-100,100);
-    }
-    void off()
-    {
-      set(0);
-    }
-    void on()
-    {
-      set(100);
-    }
-    void reverse()
-    {
-      set(-100);
-    }
-    void setReversed(bool rev)
-    {
-      reversed = rev;
+      goal = 1500;
+      cur = goal;
+      controller.writeMicroseconds(cur);
     }
     //Should be called in each loop so PWM slowly ramps up, doesn't work otherwise
     void run()
     {
       if (cur != goal)
       {
-        if (goal == 1500) _set(1500);
+        if (goal == 1500) cur = 1500;
         else if (goal < 1500)
         {
-          _set(cur - 100);
+          cur -= 100;
         }
         else if (goal > 1500)
         {
-          _set(cur + 100);
+          cur += 100;
         }
+        controller.writeMicroseconds(cur);
       }
     }
 };
 Victor shooter(SHOOTER_PIN);
-//shooter.setReversed(true);
 
-
-class Pololu
+//Class for controlling the Pololu speed controller used for the feeder
+class Pololu : public SpeedController
 {
-    private:
-      int inA_pin;
-      int inB_pin;
-      int pwm_pin;
-      int speed;
-      Servo controller;
-   public:
-      Pololu(int a, int b, int pwm)
-      {
-        inA_pin = a;
-        inB_pin = b;
-        pwm_pin = pwm;
-        controller = Servo();
-      }
-     void init()
-     {
-       pinMode(inA_pin,OUTPUT);
-       pinMode(inB_pin,OUTPUT);
-       controller.attach(pwm_pin);
-     }
-     void set(int s)
+  private:
+    int inA_pin;
+    int inB_pin;
+    int pwm_pin;
+    int speed;
+    Servo controller;
+    void _set(int s)
     {
-      if (s == 0)
-      {
+      speed = s;
+      if (s == 0) {
         digitalWrite(inA_pin,LOW);
         digitalWrite(inB_pin,LOW);
         controller.writeMicroseconds(1500);
-      }
-      if(s < 0)
-      {
+      } else if(s < 0) {
         digitalWrite(inA_pin,HIGH);
         digitalWrite(inB_pin,LOW);
-        //do direction stuff
         controller.writeMicroseconds(map(s,-100,0,1000,2000));
-      } else if (s > 0)
-      {
+      } else if (s > 0) {
         digitalWrite(inA_pin,LOW);
         digitalWrite(inB_pin,HIGH);
         controller.writeMicroseconds(map(s,0,100,1000,2000));
-        
-      }
+      }     
     }
-void off()
-{
-set(0);
-}
-void on()
-{
-set(100);
-}
-void reverse()
-{
-set(-100);
-}
-};
-
-
-class Feeder
-{
-  private:
-
-  public:
-    Pololu motor;
-    Feeder (int a,int b, int pwm) :
-      motor(a,b,pwm)
+    int _get()
     {
-  
+      return speed;
+    }
+  public:
+    Pololu(int a, int b, int pwm)
+    {
+      inA_pin = a;
+      inB_pin = b;
+      pwm_pin = pwm;
+      speed = 0;
+      controller = Servo();
     }
     void init()
     {
-      motor.init();
-    }
-    void run()
-    {
-      //motor.run();
+      pinMode(inA_pin,OUTPUT);
+      pinMode(inB_pin,OUTPUT);
+      controller.attach(pwm_pin);
     }
 };
-Feeder feeder(8,9,5);
+Pololu feeder(FEEDER_A_PIN,FEEDER_B_PIN,FEEDER_PWM_PIN);
 
 class AutoController
 {
@@ -187,7 +174,7 @@ class AutoController
 		}
 		void cancel()
 		{
-			feeder.motor.off();
+			feeder.off();
 			shooter.off();
 			auto_shoot = false;
 		}
@@ -197,7 +184,7 @@ class AutoController
 			{
 				unsigned long time_since_start = millis() - start_shoot_time;
 				if (time_since_start < SPIN_UP_TIME) shooter.on();
-				else if (time_since_start > SPIN_UP_TIME && time_since_start < TOTAL_TIME) feeder.motor.on(); //feeder.motor.set(FEED_SPEED);
+				else if (time_since_start > SPIN_UP_TIME && time_since_start < TOTAL_TIME) feeder.on(); //feeder.motor.set(FEED_SPEED);
 				else if (time_since_start > TOTAL_TIME) cancel();
 			}
 		}	
@@ -221,11 +208,11 @@ class Comms
       else if (s == "flyoff")
         shooter.off();
       else if (s == "feedon")
-        feeder.motor.on();
+        feeder.on();
       else if (s == "feedoff")
-        feeder.motor.off();
+        feeder.off();
       else if (s == "feedreverse")
-        feeder.motor.reverse();
+        feeder.reverse();
       else if (s == "shoot")
         autoController.shoot();
       else if (s == "cancel")
@@ -269,6 +256,5 @@ void loop()
   com.run();
   autoController.run();
   shooter.run();
-  feeder.run();
   delay(100);
 }
