@@ -110,22 +110,24 @@ class Pololu : public SpeedController
     int inB_pin;
     int pwm_pin;
     int speed;
-    Servo controller;
+    //Servo controller;
     void _set(int s)
     {
       speed = s;
       if (s == 0) {
         digitalWrite(inA_pin,LOW);
         digitalWrite(inB_pin,LOW);
+        analogWrite(pwm_pin,0);
         controller.writeMicroseconds(1500);
       } else if(s < 0) {
         digitalWrite(inA_pin,HIGH);
         digitalWrite(inB_pin,LOW);
-        controller.writeMicroseconds(map(s,-100,0,1000,2000));
+        analogWrite(pwm_pin,map(s,-100,0,0,255));
       } else if (s > 0) {
         digitalWrite(inA_pin,LOW);
         digitalWrite(inB_pin,HIGH);
-        controller.writeMicroseconds(map(s,0,100,1000,2000));
+        analogWrite(pwm_pin,map(s,0,100,0,255));
+        //controller.writeMicroseconds(map(s,0,100,1000,2000));
       }     
     }
     int _get()
@@ -139,13 +141,14 @@ class Pololu : public SpeedController
       inB_pin = b;
       pwm_pin = pwm;
       speed = 0;
-      controller = Servo();
+      //controller = Servo();
     }
     void init()
     {
       pinMode(inA_pin,OUTPUT);
       pinMode(inB_pin,OUTPUT);
-      controller.attach(pwm_pin);
+      pinMOde(pwm_pin,OUTPUT);
+      //controller.attach(pwm_pin);
     }
 };
 Pololu feeder(FEEDER_A_PIN,FEEDER_B_PIN,FEEDER_PWM_PIN);
