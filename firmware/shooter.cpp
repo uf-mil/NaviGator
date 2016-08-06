@@ -58,7 +58,6 @@ class Victor : public SpeedController
     int goal;
     int cur;
     int pin;
-    bool reversed;
     //Internal set command to write to controller PWM
     void _set(int s)
     {
