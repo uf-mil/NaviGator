@@ -35,7 +35,7 @@ ros_git_get() {
 	builtin cd $CATKIN_DIR/src
 
 	# Check if it already exists
-	for folder in "$INSTALL_FOLDER"/*; do
+	for folder in $CATKIN_DIR/src/*; do
 		if ! [ -d $folder ]; then
 			continue;
 		fi
@@ -50,7 +50,7 @@ ros_git_get() {
 
 		# Automatically checks if HTTPS is available
 		REMOTE_URL=`git config remote.$TRACKING_REMOTE.url`
-		if python -c "import re; _, have_url = re.split('https://github.com|git@github.com:', '$REMOTE_URL');_, want_url = re.split('https://github.com|git@github.com:', '$INSTALL_URL'); ex$
+		if python -c "import re; _, have_url = re.split('https://github.com|git@github.com:', '$REMOTE_URL');_, want_url = re.split('https://github.com|git@github.com:', '$INSTALL_URL'); exit(have_url != want_url)"; then
 			instlog "Already have package at url $INSTALL_URL"
 			NEEDS_INSTALL=false;
 			break;
@@ -58,7 +58,7 @@ ros_git_get() {
 		builtin cd $CATKIN_DIR/src
 	done
 	if $NEEDS_INSTALL; then
-		instlog "Installing $INSTALL_URL in $INSTALL_FOLDER"
+		instlog "Installing $INSTALL_URL in $CATKIN_DIR/src"
 		git clone -q $INSTALL_URL --depth=1
 	fi
 }
@@ -79,13 +79,18 @@ SCRIPT_DIR="`dirname $SCRIPT_PATH`"
 # Convert script arguments to variables
 while [ "$#" -gt 0 ]; do
 	case $1 in
-		-h) printf "\nUsage: $0 \n
-			[-c] catkin_workspace (Recommend: ~/navigator_ws)\n
-			example: ./install.sh -c ~/navigator_ws
-			\n"; exit ;;
+		-h) printf "\nUsage: $0\n"
+			printf "\n    [-c] catkin_workspace (Recommend: ~/navigator_ws)\n"
+			printf "\n    example: ./install.sh -c ~/navigator_ws\n"
+			printf "\n"
+			exit 0
+			;;
 		-c) CATKIN_DIR="$2"
-			shift 2;;
-		-?) instwarn "Option $1 is not implemented"; exit ;;
+			shift 2
+			;;
+		-?) instwarn "Option $1 is not implemented"
+			exit 1
+			;;
 	esac
 done
 
@@ -245,7 +250,7 @@ sudo apt-get install -qq ros-indigo-camera-info-manager
 sudo apt-get install -qq ros-indigo-spacenav-node
 sudo apt-get install -qq ros-indigo-camera1394
 sudo apt-get install -qq ros-indigo-stereo-image-proc
-sudo apt-get install -qq ros-indigo-pcl-conversions
+sudo apt-get install -qq ros-indigo-pcl-ros ros-indigo-pcl-conversions
 sudo apt-get install -qq ros-indigo-rosbag-image-compressor ros-indigo-compressed-image-transport ros-indigo-compressed-depth-image-transport
 
 instlog "Installing Sub8 dependencies from Python PIP"
