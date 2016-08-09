@@ -128,7 +128,7 @@ fi
 # Make sure script dependencies are installed on bare bones installations
 instlog "Installing install script dependencies"
 sudo apt-get update -qq
-sudo apt-get install -qq wget ssh git
+sudo apt-get install -qq wget ssh git lsb-release fakeroot
 
 # Add software repositories for ROS and Gazebo
 instlog "Adding ROS and Gazebo PPAs to software sources"
@@ -190,15 +190,6 @@ if !(ls "$CATKIN_DIR/src" | grep --quiet "Navigator"); then
 	cd $CATKIN_DIR/src/Navigator
 	git remote rename origin upstream
 	instlog "Make sure you change your git to point to your own fork! (git remote add origin your_forks_url)"
-fi
-
-# Check if the Sub8 repository is present; if it isn't, download it
-if !(ls "$CATKIN_DIR/src" | grep --quiet "Sub8"); then
-	instlog "Downloading up the Sub8 repository"
-	cd $CATKIN_DIR/src
-	git clone -q https://github.com/uf-mil/Sub8.git
-	cd $CATKIN_DIR/src/Sub8
-	git remote rename origin upstream
 fi
 
 
@@ -265,6 +256,7 @@ sudo pip install -q -U characteristic
 sudo pip install -q -U crc16
 
 instlog "Getting Sub8 ROS packages we need to install from source"
+ros_git_get https://github.com/uf-mil/Sub8.git
 ros_git_get https://github.com/txros/txros.git
 ros_git_get https://github.com/uf-mil/rawgps-tools.git
 ros_git_get https://github.com/ros-simulation/gazebo_ros_pkgs.git
