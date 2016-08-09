@@ -181,7 +181,7 @@ fi
 if !(ls "$CATKIN_DIR/src" | grep --quiet "Navigator"); then
 	instlog "Downloading up the Navigator repository"
 	cd $CATKIN_DIR/src
-	git clone -q https://github.com/whispercoros/Navigator.git
+	git clone -q https://github.com/uf-mil/Navigator.git
 	cd $CATKIN_DIR/src/Navigator
 	git remote rename origin upstream
 	instlog "Make sure you change your git to point to your own fork! (git remote add origin your_forks_url)"
@@ -191,7 +191,7 @@ fi
 if !(ls "$CATKIN_DIR/src" | grep --quiet "Sub8"); then
 	instlog "Downloading up the Sub8 repository"
 	cd $CATKIN_DIR/src
-	git clone -q https://github.com/whispercoros/Sub8.git
+	git clone -q https://github.com/uf-mil/Sub8.git
 	cd $CATKIN_DIR/src/Sub8
 	git remote rename origin upstream
 fi
