@@ -142,7 +142,7 @@ sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 0xB01FA116
 # Install ROS and other project dependencies
 instlog "Installing ROS and Gazebo"
 sudo apt-get update -qq
-sudo apt-get install -qq python-catkin-pkg python-rosdep ros-indigo-desktop
+sudo apt-get install -qq python-catkin-pkg python-rosdep ros-indigo-desktop-full
 sudo apt-get install -qq gazebo7
 
 # Source ROS configurations for bash on this user account
