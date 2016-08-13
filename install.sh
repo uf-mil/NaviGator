@@ -128,7 +128,7 @@ fi
 # Make sure script dependencies are installed on bare bones installations
 instlog "Installing install script dependencies"
 sudo apt-get update -qq
-sudo apt-get install -qq wget ssh git lsb-release fakeroot
+sudo apt-get install -qq lsb-release wget aptitude fakeroot ssh git
 
 # Add software repositories for ROS and Gazebo
 instlog "Adding ROS and Gazebo PPAs to software sources"
@@ -143,6 +143,10 @@ sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 0xB01FA116
 instlog "Installing ROS and Gazebo"
 sudo apt-get update -qq
 sudo apt-get install -qq python-catkin-pkg python-rosdep ros-indigo-desktop-full
+
+# Break the ROS Indigo metapackage and install an updated version of Gazebo
+sudo aptitude unmarkauto -q '?reverse-depends(ros-indigo-desktop-full) | ?reverse-recommends(ros-indigo-desktop-full)'
+sudo apt-get purge -qq ros-indigo-gazebo*
 sudo apt-get install -qq gazebo7
 
 # Source ROS configurations for bash on this user account
