@@ -39,27 +39,27 @@ target_link_libraries(
         ${GAZEBO_LIBRARIES}
 )
 
-#add_library(
-#    sub8_thrusters
-#        src/sub8_thrusters.cc
-#)
+add_library(
+    navigator_thrusters
+        src/navigator_thrusters.cpp
+)
 
-#set_target_properties(sub8_thrusters PROPERTIES COMPILE_FLAGS "-std=c++11 -Wall")
+set_target_properties(navigator_thrusters PROPERTIES COMPILE_FLAGS "-std=c++11 -Wall")
 
 
-#target_link_libraries(
-#    sub8_thrusters
-#        ${catkin_LIBRARIES}
-#        ${GAZEBO_LIBRARIES}
-#)
+target_link_libraries(
+    navigator_thrusters
+        ${catkin_LIBRARIES}
+        ${GAZEBO_LIBRARIES}
+)
 
 generate_messages(DEPENDENCIES std_msgs)
 
-#add_dependencies(sub8_thrusters
-#    sub8_msgs_generate_messages_cpp
-#    sub8_msgs_generate_messages_py
-#    ${catkin_EXPORTED_TARGETS}
-#)
+add_dependencies(navigator_thrusters
+    navigator_msgs_generate_messages_cpp
+    navigator_msgs_generate_messages_py
+    ${catkin_EXPORTED_TARGETS}
+)
 
 catkin_package(
     INCLUDE_DIRS include

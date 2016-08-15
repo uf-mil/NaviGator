@@ -1,13 +1,13 @@
 <launch>
   <param name="use_sim_time" value="true" />
   <arg name="gui" default="true" />
+ 
+  <include file="$(find navigator_launch)/launch/gnc.launch"/>
 
   <!-- start gazebo server-->
   <node name="gazebo" pkg="gazebo_ros" type="gzserver" respawn="false"
-    args="$(find navigator_gazebo)/worlds/a_whole_new.world" />
-  <node name="gazebo_gui" pkg="gazebo_ros" type="gzclient" respawn="false" if="$(arg gui)" />
-
-  <node pkg="kill_handling" type="kill_master" name="kill_master"/>
+    args="$(find navigator_gazebo)/worlds/a_whole_new.world" output="screen"/>
+  <node name="gazebo_gui" pkg="gazebo_ros" type="gzclient" respawn="false" if="$(arg gui)" output="screen" />
 
   <node name="spawn_wamv" pkg="gazebo_ros" type="spawn_model"
     args="-file $(find navigator_gazebo)/models/wamv/wamv.sdf -sdf

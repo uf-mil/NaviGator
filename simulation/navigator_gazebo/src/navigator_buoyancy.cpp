@@ -18,6 +18,8 @@
 #include "gazebo/common/Assert.hh"
 #include "gazebo/common/Events.hh"
 #include "navigator_gazebo/navigator_buoyancy.hpp"
+#include "ros/ros.h"
+#include <sstream>
 
 using namespace gazebo;
 
