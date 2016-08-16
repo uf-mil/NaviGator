@@ -1,8 +1,6 @@
 <launch>
   <param name="use_sim_time" value="true" />
   <arg name="gui" default="true" />
- 
-  <include file="$(find navigator_launch)/launch/gnc.launch"/>
 
   <!-- start gazebo server-->
   <node name="gazebo" pkg="gazebo_ros" type="gzserver" respawn="false"
