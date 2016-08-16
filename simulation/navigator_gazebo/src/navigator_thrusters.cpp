@@ -28,10 +28,10 @@ void ThrusterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) {
   frSub = nh.subscribe("FR_motor/cmd", 1, &ThrusterPlugin::FRCallback, this);
 
   // Load Thruster Configuration
-  this->thrusters.push_back(Thruster("FR"));
-  this->thrusters.push_back(Thruster("FL"));
-  this->thrusters.push_back(Thruster("BR"));
   this->thrusters.push_back(Thruster("BL"));
+  this->thrusters.push_back(Thruster("BR"));
+  this->thrusters.push_back(Thruster("FL"));
+  this->thrusters.push_back(Thruster("FR"));
 
   // Apply to multiple links
   GZ_ASSERT(this->sdf->HasElement("link"), "Must have a link specified!");
@@ -84,7 +84,6 @@ void ThrusterPlugin::OnUpdate() {
   std::vector<double> cmdBuffer;
   cmdBuffer = this->commands;
   mtx.unlock();
-  //ROS_INFO("l: %f \n", this->commands.size());  
 
   GZ_ASSERT(this->targetLink, "Could not find specified link");
 
@@ -92,7 +91,7 @@ void ThrusterPlugin::OnUpdate() {
   math::Vector3 net_torque(0.0, 0.0, 0.0);
 
   for (uint i = 0; i < cmdBuffer.size(); i++) {
-    // Clamp thrust value, convert to newton, accumulate for net force
+    // Clamp thrust value, convert to newton, then accumulate for net force
 
     double abs_thrust = std::abs(cmdBuffer[i]);
     double sign = cmdBuffer[i] / abs_thrust;
@@ -108,12 +107,11 @@ void ThrusterPlugin::OnUpdate() {
     net_torque += torque;
   }
   
-/*  ROS_INFO_THROTTLE(1, "things: %f, %f, %f, %f, size: %d", cmdBuffer[0], cmdBuffer[1], cmdBuffer[2], cmdBuffer[3], cmdBuffer.size());
-  ROS_INFO_THROTTLE(1, "force: %f, %f, %f", net_force[0], net_force[1], net_force[2]);
+/*  ROS_INFO_THROTTLE(1, "things: %f, %f, %f, %f", cmdBuffer[0], cmdBuffer[1], cmdBuffer[2], cmdBuffer[3]);
+  ROS_INFO_THROTTLE(1, "force: %f, %f, %f", force[0], force[1], force[2]);
   ROS_INFO_THROTTLE(1, "torque: %f, %f, %f", net_torque[0], net_torque[1], net_torque[2]);
 */
 
-  // this->targetLink->AddForceAtRelativePosition(force, thrusterMap[name].position);
   this->targetLink->AddRelativeForce(net_force);
   this->targetLink->AddRelativeTorque(net_torque);
 
