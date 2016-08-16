@@ -5,11 +5,14 @@
 
 <launch>
     <arg name="gazebo" default="true"/>
+    <arg name="gui" default="true"/>
 
     <include file="$(find navigator_launch)/launch/gnc.launch"/>
     <include file="$(find navigator_launch)/launch/perception.launch"/>
 
-    <include file="$(find navigator_gazebo)/launch/goose.launch" if="$(arg gazebo)"/>
+    <include file="$(find navigator_gazebo)/launch/goose.launch" if="$(arg gazebo)">
+    	<arg name="gui" value="$(arg gui)"/>
+    </include>
     
     <group unless="$(arg gazebo)">
         <node pkg="navigator_sim_model" type="sim.py" name="navigator_sim_model" output="screen">
