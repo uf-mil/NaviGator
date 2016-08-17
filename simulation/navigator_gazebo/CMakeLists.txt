@@ -13,7 +13,7 @@ find_package(catkin
     message_generation
 )
 
-catkin_python_setup()
+#catkin_python_setup()
 
 
 find_package(gazebo REQUIRED)
