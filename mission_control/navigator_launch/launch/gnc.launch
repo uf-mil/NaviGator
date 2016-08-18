@@ -4,20 +4,21 @@
         Nodes launched:
             * thruster mapper
             * pose_controller
-            * sdgps_solution_ros_bridge
             * wrench_arbiter
             * joystick_wrench
             * joy_node
-            * ins_tf
-            * lidar_tf
-            * forward_camera_tf
+            * alarm_handler
+            * tf
+              - ins_tf
+              - lidar_tf
+              - forward_camera_tf
+              - right_camera_tf
+              - down_camera_tf
+              - shooter_tf
 
         It takes in twp parameters
         * 'sim' to launch only certain nodes.
         * 'rc' to decide whether to launch the xbox remote control nodes
-
-        Nodes affected by the 'sim' arg:
-            * sdgps_solution_ros_bridge
 
         Nodes affected by the 'rc' arg:
             * joystick_wrench
@@ -63,9 +64,6 @@
         <param name="autorepeat_rate" value="5"/>
     </node>
 
-<!--     <node pkg="tf" type="static_transform_publisher" name="ins_tf" args=".37084 .0.05715 .7493  0 0 0 1  /base_link /ins 100"/>
-    <node pkg="tf" type="static_transform_publisher" name="lidar_tf" args=".5334 0.0127 .7493  0 0 0 1  /base_link /lidar 100" />
-    <node pkg="tf" type="static_transform_publisher" name="forward_camera_tf" args=".6096 -.254 .762  0 0 0 1  /base_link /camera 100" /> -->
 
     <node name="move_helper" pkg="navigator_tools" type="move_helper.py"/>
 
