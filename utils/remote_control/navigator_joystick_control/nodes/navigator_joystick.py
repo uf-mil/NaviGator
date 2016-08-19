@@ -23,11 +23,11 @@ class Joystick(object):
         self.force_scale = rospy.get_param("~force_scale")
         self.torque_scale = rospy.get_param("~torque_scale")
 
-        self.last_change_mode = 0
-        self.last_station_hold_state = 0
-        self.last_kill = 0
-        self.last_rc = 0
-        self.last_auto = 0
+        self.last_change_mode = False
+        self.last_station_hold_state = False
+        self.last_kill = False
+        self.last_rc = False
+        self.last_auto = False
 
         self.killed = False
         self.docking = False
@@ -64,12 +64,12 @@ class Joystick(object):
     def joy_cb(self, joy):
 
         # Handle Button presses
-        change_mode = joy.buttons[3]  # Y
-        kill = joy.buttons[2]  # X
-        station_hold = joy.buttons[0]  # A
-        docking = joy.buttons[1]  # B
-        rc_control = joy.buttons[11]  # d-pad left
-        auto_control = joy.buttons[12]  # d-pad right
+        change_mode = bool(joy.buttons[3])  # Y
+        kill = bool(joy.buttons[2])  # X
+        station_hold = bool(joy.buttons[0])  # A
+        docking = bool(joy.buttons[1])  # B
+        rc_control = bool(joy.buttons[11])  # d-pad left
+        auto_control = bool(joy.buttons[12])  # d-pad right
 
         # Change vehicle mode
         if change_mode == 1 and change_mode != self.last_change_mode:
