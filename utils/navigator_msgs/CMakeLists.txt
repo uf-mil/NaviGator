@@ -9,12 +9,22 @@ find_package(catkin REQUIRED COMPONENTS
 	)
 
 add_message_files(
+  DIRECTORY msg
   FILES
   Acceleration.msg
   PoseTwist.msg
   Coordinates.msg
   PoseTwistStamped.msg
+  Point.msg
+  Points.msg
   Waypoint.msg
+)
+
+add_service_files(
+  DIRECTORY srv
+  FILES
+  VisionRequest.srv
+  WrenchSelect.srv
 )
 
 generate_messages(
