@@ -101,12 +101,15 @@ is-navigator-up()
 set-navigator-env()
 {
   if [[ \$(is-navigator-up) == "true" ]]; then #If navigator network is connected, set correct ROS env
+    unset ROS_HOSTNAME
+    export ROS_IP=\$(hostname -I)
     export ROS_MASTER_URI=http://wamv:11311
   else
+    unset ROS_IP
+    export ROS_HOSTNAME=localhost
     export ROS_MASTER_URI=http://localhost:11311
   fi
 }
-export ROS_HOSTNAME=localhost
 alias navigator-up='nmcli con up id Navigator'
 alias navigator-down='nmcli con down id Navigator'
 alias navigator-connect='navigator-up;set-navigator-env'
