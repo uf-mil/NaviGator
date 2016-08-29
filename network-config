@@ -98,30 +98,45 @@ is-navigator-up()
     echo "false"
   fi
 }
-set-navigator-env()
+set-ros-ip()
 {
-  if [[ \$(is-navigator-up) == "true" ]]; then #If navigator network is connected, set correct ROS env
-    unset ROS_HOSTNAME
-    export ROS_IP=\$(hostname -I)
-    export ROS_MASTER_URI=http://wamv:11311
-  else
+  host_test=\$(hostname -I)
+  if [[ \"\$host_test\"  == \"\" ]]; then #if network not connected, set ROS_HOSTNAME to localhost for local roscore
     unset ROS_IP
     export ROS_HOSTNAME=localhost
+  else #if connected to a network, set ROS_IP to local ip address
+    unset ROS_HOSTNAME
+    export ROS_IP="\$host_test"
+
+  fi
+}
+set-navigator-env()
+{
+  set-ros-ip
+  if [[ \$(is-navigator-up) == true ]]; then #If navigator network is connected, set correct ROS env
+    export ROS_MASTER_URI=http://wamv:11311
+  else
     export ROS_MASTER_URI=http://localhost:11311
   fi
 }
+export ROS_HOSTNAME=localhost
 alias navigator-up='nmcli con up id Navigator'
 alias navigator-down='nmcli con down id Navigator'
 alias navigator-connect='navigator-up;set-navigator-env'
 alias navigator-disconnect='navigator-down;set-navigator-env'
+
+
 set-navigator-env
 #end created-by-navigator-network-script
 "
-
   if grep --quiet created-by-navigator-network-script $HOME/.bashrc; then
     echo "Previously configured .bashrc, skipping..."
   else
-    sudo -u ${USER} echo "$BASHRC_STR" >> $HOME/.bashrc
+    if [ $(isroot) -ne 1 ]; then
+      echo "$BASHRC_STR" >> $HOME/.bashrc
+    else
+      sudo -u ${USER} echo "$BASHRC_STR" >> $HOME/.bashrc
+    fi
   fi
 }
 
@@ -177,9 +192,17 @@ while getopts $FLAG_CONFIG opt; do
 done
 
 #Ensures script was prefixed with sudo so networkmanger and /etc/hosts can be configured
-checkroot()
+isroot()
 {
   if [ $(id -u) -ne 0 ]; then
+    echo 0
+  else 
+    echo 1
+  fi
+}
+checkroot()
+{
+  if [ $(isroot) -ne 1 ]; then
     echo "Please run as root (sudo SCRIPTFILE)"
     exit 2
   fi
