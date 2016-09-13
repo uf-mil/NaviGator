@@ -55,6 +55,8 @@ include_directories(
 add_library(
     navigator_vision_lib
     helper/model.cc 
+    helper/object_tracker.cc
+    helper/color_tracker.cc
     src/navigator_vision_lib/visualization.cc
     src/navigator_vision_lib/cv_utils.cc
     helper/stereomodelfitter.cc
