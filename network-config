@@ -1,0 +1,224 @@
+#!/bin/sh
+
+FLAG_CONFIG="d:ia:n:hsbc" 
+
+HELP_STR="\
+Navigator Networking Script
+Automatically configures computer for networking with Navigator
+
+Usage:
+-h                Shows this help string
+-i                Does complete install for navigator networking (sudo required)
+
+-a 192.168.1.2XX  Sets static IP address to use when connecting to navigator
+-d ethx           Sets network interface to use with Navigator
+
+-c                Installs only network-manager config file (sudo required)
+-s                Installs only navigator hostnames to /etc/hosts (sudo required)
+-b                Installs only allias for connecting to navigator to .bashrc
+
+ex: sudo ./network-config -i -d eth1 -a 192.168.1.202
+"
+
+CONFIG_NAME="Navigator" #Name network manager displays for Navigator's config
+NETWORK_INTERFACE="eth0" #Ethernet interface to use for Navigator network
+IP_ADDR="192.168.1.200" #Static IP for computer to use when connecting to navigator, ensure no one else uses this ip
+
+DO_INSTALL_NET=false
+DO_INSTALL_ENV=false
+DO_INSTALL_HOSTS=false
+
+#Creates a network manager config file and installs it
+install_net()
+{
+  if ! MAC_ADDR=$(cat /sys/class/net/$NETWORK_INTERFACE/address) ; then
+    echo "Network interface $NETWORK_INTERFACE not found"
+    echo "Please set the correct interface with -d ethX"
+    exit 2
+  fi
+
+  CONFIG_UUID=$(uuidgen)
+CONFIG_STR="
+[802-3-ethernet]
+duplex=full
+mac-address=$MAC_ADDR
+
+[connection]
+id=$CONFIG_NAME
+uuid=$(uuidgen)
+type=802-3-ethernet
+autoconnect=false
+
+[ipv6]
+method=ignore
+
+[ipv4]
+method=manual
+address1=$IP_ADDR/24,0.0.0.0
+"
+echo "$CONFIG_STR" > /etc/NetworkManager/system-connections/Navigator
+chmod 600 /etc/NetworkManager/system-connections/Navigator
+}
+
+POST_ENV_STR="
+Navigator alliases configured!
+To connect to navigator, run navigator-connect
+To disconnect from navigator, run navigator-disconnect
+"
+
+#installs hostnames used to connect to navigator and other network components
+install_hosts()
+{
+HOST_SEARCH="Navigator"
+HOSTS_STR="
+#begin created-by-navigator-network-script
+192.168.1.101   wamv
+192.168.1.2     nav_router_onboard
+192.168.1.20    nav_router_onshore
+#end created-by-navigator-network-script
+"
+
+if grep --quiet created-by-navigator-network-script /etc/hosts; then
+  echo "Previously configured /etc/hosts, skipping..."
+else
+  echo "$HOSTS_STR" >> /etc/hosts 
+fi
+}
+
+#Appends .bashrc with tools to connect to navigator
+install_env()
+{
+  BASHRC_STR="
+#begin created-by-navigator-network-script
+is-navigator-up()
+{
+  if [[ \$(nmcli -t -f NAME con status) == "Navigator" ]] ; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+set-ros-ip()
+{
+  host_test=\$(hostname -I)
+  if [[ \"\$host_test\"  == \"\" ]]; then #if network not connected, set ROS_HOSTNAME to localhost for local roscore
+    unset ROS_IP
+    export ROS_HOSTNAME=localhost
+  else #if connected to a network, set ROS_IP to local ip address
+    unset ROS_HOSTNAME
+    export ROS_IP="\$host_test"
+
+  fi
+}
+set-navigator-env()
+{
+  set-ros-ip
+  if [[ \$(is-navigator-up) == true ]]; then #If navigator network is connected, set correct ROS env
+    export ROS_MASTER_URI=http://wamv:11311
+  else
+    export ROS_MASTER_URI=http://localhost:11311
+  fi
+}
+export ROS_HOSTNAME=localhost
+alias navigator-up='nmcli con up id Navigator'
+alias navigator-down='nmcli con down id Navigator'
+alias navigator-connect='navigator-up;set-navigator-env'
+alias navigator-disconnect='navigator-down;set-navigator-env'
+
+
+set-navigator-env
+#end created-by-navigator-network-script
+"
+  if grep --quiet created-by-navigator-network-script $HOME/.bashrc; then
+    echo "Previously configured .bashrc, skipping..."
+  else
+    if [ $(isroot) -ne 1 ]; then
+      echo "$BASHRC_STR" >> $HOME/.bashrc
+    else
+      sudo -u ${USER} echo "$BASHRC_STR" >> $HOME/.bashrc
+    fi
+  fi
+}
+
+#Displays usage info if no flags supplied
+if [ "$#" -lt 1 ] ; then
+  echo "$HELP_STR"
+  exit 2
+fi
+
+#parses arguments
+while getopts $FLAG_CONFIG opt; do
+  case $opt in
+    i)
+      DO_INSTALL_NET=true
+      DO_INSTALL_HOSTS=true
+      DO_INSTALL_ENV=true
+      ;;
+    d)
+      NETWORK_INTERFACE=$OPTARG
+      echo "Interface set to $OPTARG"
+      ;;
+    h)
+      echo "$HELP_STR"
+      ;;
+    c)
+      DO_INSTALL_NET=true
+      ;;
+    a)
+      IP_ADDR=$OPTARG
+      echo "IP Address set to $OPTARG"
+      ;;
+    n)
+      CONFIG_NAME=$OPTARG
+      echo "Set config name to $OPTARG"
+      ;;
+    s)
+      DO_INSTALL_HOSTS=true
+      ;;
+    b)
+      DO_INSTALL_ENV=true
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      echo "$HELP_STR"
+      exit 1
+      ;;
+     :)
+      echo "$HELP_STR"
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+#Ensures script was prefixed with sudo so networkmanger and /etc/hosts can be configured
+isroot()
+{
+  if [ $(id -u) -ne 0 ]; then
+    echo 0
+  else 
+    echo 1
+  fi
+}
+checkroot()
+{
+  if [ $(isroot) -ne 1 ]; then
+    echo "Please run as root (sudo SCRIPTFILE)"
+    exit 2
+  fi
+}
+
+if $DO_INSTALL_NET; then
+  checkroot
+  install_net
+fi
+
+if $DO_INSTALL_HOSTS; then
+  checkroot
+  install_hosts
+fi
+
+if $DO_INSTALL_ENV; then
+  install_env
+  echo "$post_env_str"
+fi
