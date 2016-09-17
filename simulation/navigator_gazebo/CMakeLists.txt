@@ -51,6 +51,7 @@ target_link_libraries(
         ${GAZEBO_LIBRARIES}
 )
 
+
 add_library(gazebo_ros_velodyne_laser src/GazeboRosVelodyneLaser.cpp)
 
 set_target_properties(gazebo_ros_velodyne_laser PROPERTIES COMPILE_FLAGS "-std=c++11 -Wall")
