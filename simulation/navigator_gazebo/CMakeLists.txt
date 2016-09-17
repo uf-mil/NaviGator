@@ -51,6 +51,11 @@ target_link_libraries(
         ${GAZEBO_LIBRARIES}
 )
 
+add_library(animated_box SHARED src/animated_box.cc)
+target_link_libraries(animated_box ${GAZEBO_LIBRARIES})
+
+set_target_properties(animated_box PROPERTIES COMPILE_FLAGS "-std=c++11 -Wall")
+
 add_dependencies(navigator_thrusters
     navigator_msgs_generate_messages_cpp
     navigator_msgs_generate_messages_py
