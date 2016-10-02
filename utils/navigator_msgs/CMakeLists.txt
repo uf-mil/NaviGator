@@ -28,6 +28,8 @@ add_service_files(
   VisionRequest.srv
   WrenchSelect.srv
   StartGate.srv
+  StereoShapeDetector.srv
+  ScanTheCodeMission.srv
 )
 
 generate_messages(
