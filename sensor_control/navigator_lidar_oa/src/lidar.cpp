@@ -42,6 +42,11 @@ const int MIN_HITS_FOR_OCCUPANCY = 50; //20
 const int MAX_HITS_IN_CELL = 500; //500
 const double MAXIMUM_Z_HEIGHT = 8;
 
+// float LLA_BOUNDARY_X1 = 25.509 , LLA_BOUNDARY_Y1 = 103.04;
+// float LLA_BOUNDARY_X2 = -67.25, LLA_BOUNDARY_Y2 = 62.699;
+// float LLA_BOUNDARY_X3 = 0.88, LLA_BOUNDARY_Y3 = -71.08;
+// float LLA_BOUNDARY_X4 = 91.76, LLA_BOUNDARY_Y4 = -30.89;
+
 float LLA_BOUNDARY_X1 = -30, LLA_BOUNDARY_Y1 = 50;
 float LLA_BOUNDARY_X2 = -30, LLA_BOUNDARY_Y2 = -20;
 float LLA_BOUNDARY_X3 = 35, LLA_BOUNDARY_Y3 = -20;
@@ -101,9 +106,11 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 	//Inflate ogrid before detecting objects and calling AStar
 	ogrid.inflateBinary(1);
 
+
 	//Detect objects
 	std::vector<objectMessage> objects;
 	std::vector< std::vector<int> > cc = ConnectedComponents(ogrid,objects);
+
 
 	//Publish rosgrid
 	rosGrid.header.seq = 0;
@@ -190,8 +197,6 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 		m2.color.a = 0.6; m2.color.r = 1; m2.color.g = 1; m2.color.b = 1;
 		markers.markers.push_back(m2);
 		if(m2.id > max_id) max_id = m2.id;
-
-		std::cout << obj.id << ":" << obj.scale << std::endl;
 
 		visualization_msgs::Marker m4;
 		m4.header.stamp = ros::Time::now();
