@@ -17,12 +17,6 @@
 #include <fstream>
 #include <sstream>
 
-Eigen::Vector2d b1 (-30, 50);
-Eigen::Vector2d b2 (-30, -20);
-Eigen::Vector2d b3 (35, -20);
-Eigen::Vector2d b4 (35, 50);
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,18 +68,14 @@ union floatConverter
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
 class OccupancyGrid
 {
-	float LLA_BOUNDARY_X1 = -30, LLA_BOUNDARY_Y1 = 50;
-float LLA_BOUNDARY_X2 = -30, LLA_BOUNDARY_Y2 = -20;
-float LLA_BOUNDARY_X3 = 35, LLA_BOUNDARY_Y3 = -20;
-float LLA_BOUNDARY_X4 = 35, LLA_BOUNDARY_Y4 = 50;
 	public:
 		////////////////////////////////////////////////////////////
-	    /// \brief ?
-	    ///
-	    /// \param ?
-	    /// \param ?
+	    Eigen::Vector2d b1;
+		Eigen::Vector2d b2;
+		Eigen::Vector2d b3;
+		Eigen::Vector2d b4;
 	    ////////////////////////////////////////////////////////////
-		OccupancyGrid(double map_size_meters, double roi_size_meters, double voxel_size) : MAP_SIZE_METERS(map_size_meters), 
+		OccupancyGrid(double map_size_meters, double roi_size_meters, double voxel_size, float bounds[]) : MAP_SIZE_METERS(map_size_meters), 
 								    VOXEL_SIZE_METERS(voxel_size),
 								    GRID_SIZE(map_size_meters/voxel_size),
 								    ROI_SIZE(roi_size_meters/voxel_size),
@@ -94,7 +84,10 @@ float LLA_BOUNDARY_X4 = 35, LLA_BOUNDARY_Y4 = 50;
 								    ogridBinaryCopy(ROI_SIZE, std::vector<bool>(ROI_SIZE)),
 								    ogridMap(std::vector<int8_t>(ROI_SIZE*ROI_SIZE))								 
 		{
-			//std::cout << ogrid.size() << "," << ogrid[0].size() << std::endl;
+			b1 = Eigen::Vector2d(bounds[0], bounds[4]);
+			b2 = Eigen::Vector2d(bounds[1], bounds[5]);
+			b3 = Eigen::Vector2d(bounds[2], bounds[6]);
+			b4 = Eigen::Vector2d(bounds[3], bounds[7]);
 		}
 		
 		////////////////////////////////////////////////////////////
@@ -285,65 +278,3 @@ float LLA_BOUNDARY_X4 = 35, LLA_BOUNDARY_Y4 = 50;
 };	
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//									Graveyard
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-		//int metersToVoxel(float d) const
-		//{
-		//	return floor(d/VOXEL_SIZE_METERS + GRID_SIZE/2);
-		//}
-					int expand = 0; 
-					for (int jj = 0; jj < 9; ++jj) {
-						int r = row+rOffset[jj], c = col+cOffset[jj];
-						if (ogridBinary[r][c]) { ++expand; }
-					}
-					if (expand >= 5) {
-						++expansions;
-						ogridBinary[row][col] = true;
-						ogridMap[row*ROI_SIZE+col] = 100;
-					}
-
-			//File saving to OpenGL
-			//std::stringstream ss;
-			//ss << "/home/darkknight/Code/lidarscanner/opengl/data/" << fileName << "_" << updateCounter << ".txt";
-			//std::cout << "Wrinting file " << ss.str() << std::endl;
-			//std::ofstream fid(ss.str());
-*/
