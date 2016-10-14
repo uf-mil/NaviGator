@@ -42,15 +42,15 @@ const int MIN_HITS_FOR_OCCUPANCY = 50; //20
 const int MAX_HITS_IN_CELL = 500; //500
 const double MAXIMUM_Z_HEIGHT = 8;
 
-// float LLA_BOUNDARY_X1 = 25.509 , LLA_BOUNDARY_Y1 = 103.04;
-// float LLA_BOUNDARY_X2 = -67.25, LLA_BOUNDARY_Y2 = 62.699;
-// float LLA_BOUNDARY_X3 = 0.88, LLA_BOUNDARY_Y3 = -71.08;
-// float LLA_BOUNDARY_X4 = 91.76, LLA_BOUNDARY_Y4 = -30.89;
+ float LLA_BOUNDARY_X1 = 60.87 , LLA_BOUNDARY_Y1 = 11;
+ float LLA_BOUNDARY_X2 = -31.0, LLA_BOUNDARY_Y2 = -29.0;
+ float LLA_BOUNDARY_X3 = 36.0, LLA_BOUNDARY_Y3 = -163.0;
+ float LLA_BOUNDARY_X4 = 127.0, LLA_BOUNDARY_Y4 = -122.0;
 
-float LLA_BOUNDARY_X1 = -30, LLA_BOUNDARY_Y1 = 50;
-float LLA_BOUNDARY_X2 = -30, LLA_BOUNDARY_Y2 = -20;
-float LLA_BOUNDARY_X3 = 35, LLA_BOUNDARY_Y3 = -20;
-float LLA_BOUNDARY_X4 = 35, LLA_BOUNDARY_Y4 = 50;
+//float LLA_BOUNDARY_X1 = -30, LLA_BOUNDARY_Y1 = 50;
+//float LLA_BOUNDARY_X2 = -30, LLA_BOUNDARY_Y2 = -20;
+//float LLA_BOUNDARY_X3 = 35, LLA_BOUNDARY_Y3 = -20;
+//float LLA_BOUNDARY_X4 = 35, LLA_BOUNDARY_Y4 = 50;
 
 float bounds[] = {LLA_BOUNDARY_X1,LLA_BOUNDARY_X2,LLA_BOUNDARY_X3,LLA_BOUNDARY_X4,LLA_BOUNDARY_Y1,LLA_BOUNDARY_Y2,LLA_BOUNDARY_Y3,LLA_BOUNDARY_Y4};
 
@@ -60,6 +60,8 @@ float bounds[] = {LLA_BOUNDARY_X1,LLA_BOUNDARY_X2,LLA_BOUNDARY_X3,LLA_BOUNDARY_X
 OccupancyGrid ogrid(MAP_SIZE_METERS,ROI_SIZE_METERS,VOXEL_SIZE_METERS, bounds);
 
 nav_msgs::OccupancyGrid rosGrid;
+geometry_msgs::Pose boatPose_enu;
+geometry_msgs::Twist boatTwist_enu;
 ros::Publisher pubGrid, pubMarkers, pubBuoys, pubTrajectory, pubWaypoint, pubMarkersSmall;
 
 visualization_msgs::MarkerArray markers, small_markers;	
@@ -167,7 +169,7 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 	buoy.header.frame_id = "enu";
 	buoy.header.stamp = ros::Time::now();	
 
-	auto object_permanence = object_tracker.add_objects(objects);
+	auto object_permanence = object_tracker.add_objects(objects, boatPose_enu);
 	std::vector<objectMessage> small_objects = BoundingBox::get_accurate_objects(pcloud, object_permanence, T_enu_velodyne);
 	int max_id = 0;
 
@@ -240,6 +242,12 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 	ROS_INFO("**********************************************************");
 }
 
+void cb_odom(const nav_msgs::OdometryConstPtr &odom) {
+	//ROS_INFO("cb_odom...");	
+	boatPose_enu = odom->pose.pose;
+	boatTwist_enu = odom->twist.twist;
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,6 +275,7 @@ int main(int argc, char* argv[])
 
 	//Subscribe to odom and the velodyne
 	ros::Subscriber sub1 = nh.subscribe("/velodyne_points", 1, cb_velodyne);
+	ros::Subscriber sub2 = nh.subscribe("/odom", 1, cb_odom);
 
 	//Publish occupancy grid and visualization markers
 	pubGrid = nh.advertise<nav_msgs::OccupancyGrid>("ogrid_batcave",10);
