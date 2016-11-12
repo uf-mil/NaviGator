@@ -228,7 +228,7 @@ class PoseEditor2(object):
         '''
         point = np.array(point)
         angle_incrment = 2 * np.pi / granularity
-        sprinkles = transformations.euler_matrix(0, 0, angle_incrment)[:3, :3]
+        sprinkles = transformations.euler_matrix(0, 0, -angle_incrment)[:3, :3]
 
         # Find first point to go to using boat rotation
         next_point = np.append(normalize(self.nav.pose[0][:2] - point[:2]), 0)  # Doing this in 2d

@@ -62,19 +62,21 @@ def main(navigator):
     found_buoys = yield navigator.database_query("start_gate")
 
     if found_buoys.found:
-       buoys = np.array(map(Buoy.from_srv, found_buoys.objects))
+        buoys = np.array(map(Buoy.from_srv, found_buoys.objects))
     else:
-       print "START_GATE: Error 4 - No db buoy response..."
-       result.success = False
-       result.response = result.DbObjectNotFound
-       result.message = "Start gates not found in the database."
-       return_with(result)
-
+        print "START_GATE: Error 4 - No db buoy response..."
+        result.success = False
+        result.response = result.DbObjectNotFound
+        result.message = "Start gates not found in the database."
+        return_with(result)
+    
+    four_mode = True
     if len(buoys) != 4:
-       print "START_GATE: Error 5 - Invaild number of buoys found: {} (expecting 4)".format(len(buoys))
-       result.success = False
-       result.message = "Invaild number of buoys found: {} (expecting 4)".format(len(buoys))
-       return_with(result)
+        four_mode = False
+        # print "START_GATE: Error 5 - Invaild number of buoys found: {} (expecting 4)".format(len(buoys))
+        # result.success = False
+        # result.message = "Invaild number of buoys found: {} (expecting 4)".format(len(buoys))
+        # return_with(result)
 
 
     # buoys = [Buoy.from_srv(left), Buoy.from_srv(right)]
@@ -109,16 +111,21 @@ def main(navigator):
     f_mid_point = f_left_buoy.position + f_between_vector / 2
     b_between_vector, _ = get_path(b_left_buoy, b_right_buoy)
     b_mid_point = b_left_buoy.position + b_between_vector / 2
-    through_vector = b_mid_point - f_mid_point
-    through_vector = through_vector / np.linalg.norm(through_vector)
+    
+    if four_mode:
+        through_vector = b_mid_point - f_mid_point
+        through_vector = through_vector / np.linalg.norm(through_vector)
 
     #print mid_point
     setup_dist = 20  # Line up with the start gate this many meters infront of the gate.
     setup = f_mid_point - f_direction_vector * setup_dist
-    target = b_mid_point + through_vector * setup_dist
+    if four_mode:
+        target = b_mid_point + through_vector * setup_dist
+    else:
+        move_dist = [50, 0, 0]
+        target = setup + f_direction_vector * move_dist
 
     # Put the target into the point cloud as well
-    #points.append(navigator_tools.numpy_to_point(b_left_buoy))
     points.append(navigator_tools.numpy_to_point(target))
     pc = PointCloud(header=navigator_tools.make_header(frame='/enu'),
                     points=np.array(points))

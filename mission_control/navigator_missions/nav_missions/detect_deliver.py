@@ -17,10 +17,10 @@ import navigator_tools
 
 class DetectDeliverMission:
     # Note, this will be changed when the shooter switches to actionlib
-    shoot_distance_meters = 7
+    shoot_distance_meters = 9
     theta_offset = np.pi / 2.0
     spotings_req = 1
-    circle_radius = 7
+    circle_radius = 10
     search_timeout_seconds = 300
     target_offset_meters = 0
     #  normal_approx_tolerance_proportion = 0.035
@@ -182,7 +182,7 @@ class DetectDeliverMission:
         yield self.circle_search()  # Go to waypoint and circle until target found
         yield self.align_to_target()
         yield self.offset_for_target()  # Move a little bit forward to be centered to target
-        yield self.shoot_all_balls()
+        #yield self.shoot_all_balls()
         yield self.navigator.vision_proxies["get_shape"].stop()
 
 @txros.util.cancellableInlineCallbacks
