@@ -158,7 +158,8 @@ class Joystick(object):
             rospy.loginfo("Station Holding")
             self.station_hold.raise_alarm()
             self.wrench_changer("autonomous")
-
+            self.station_hold.clear_alarm()
+ 
         # Turn on full system kill
         if kill == 1 and kill != self.last_kill:
             rospy.loginfo("Toggling Kill")
