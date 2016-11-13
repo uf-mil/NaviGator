@@ -5,6 +5,7 @@ import numpy as np
 from navigator_scan_the_code import ScanTheCodeMission
 from geometry_msgs.msg import PoseStamped
 import navigator_tools as nt
+from twisted.internet import defer
 from navigator_tools import fprint
 ___author___ = "Tess Bianchi"
 
@@ -16,13 +17,21 @@ def _publish_pose(pub, pose):
     pose_stamped.pose = pose
     pub.publish(pose_stamped)
 
-
+def _get_color(c):
+    if c == 'r':
+        return "RED"
+    if c == 'b':
+        return 'BLUE'
+    if c == 'y':
+        return 'YELLOW'
+    if c == 'g':
+        return 'GREEN'
 @txros.util.cancellableInlineCallbacks
 def main(navigator):
     print "sanasd"
     """Main Script of Scan The Code."""
     # UNCOMMENT
-    #navigator.change_wrench("autonomous")
+    navigator.change_wrench("autonomous")
     fprint("Moving to stc", msg_color='green') 
     pub = yield navigator.nh.advertise("/stc/pose", PoseStamped)
     mission = ScanTheCodeMission(navigator.nh)
@@ -33,21 +42,29 @@ def main(navigator):
     _publish_pose(pub, initial_pose)
     fprint("Finished getting the initial position", msg_color='green')
     # UNCOMMENT
-    #yield navigator.move.set_position(pose).look_at(look_at).go()
+    yield navigator.move.set_position(pose).look_at(look_at).go()
     myerr = mission.correct_pose(pose)
+    #yield navigator.nh.sleep(.3)
     if not mission.stc_correct:
         circle = navigator.move.circle_point(look_at, 8, granularity=30)
-        for p in circle:
+        
+        for p in list(circle)[::-1]:
             if mission.stc_correct:
                 break
             # UNCOMMENT
-            #yield p.go(move_type='skid')
+            yield p.go(move_type='skid', focus=look_at)
+    
     fprint("Finished getting the correct stc face", msg_color='green')
+    #defer.returnValue(True)
     colors = yield mission.find_colors()
     if colors is None:
         navigator.nh.set_param('mission/detect_deliver/Shape', 'CROSS')
         navigator.nh.set_param('mission/detect_deliver/Color', 'ANY')
     c1, c2, c3 = colors
+    navigator.nh.set_param('mission/scan_the_code/color1', _get_color(c1))
+    navigator.nh.set_param('mission/scan_the_code/color2', _get_color(c2)) 
+    navigator.nh.set_param('mission/scan_the_code/color3', _get_color(c3))
+    
     if c1 == 'r' and c2 == 'b' and c3 == 'g':
         navigator.nh.set_param('mission/detect_deliver/Shape', 'CIRCLE')
         navigator.nh.set_param('mission/detect_deliver/Color', 'ANY')
