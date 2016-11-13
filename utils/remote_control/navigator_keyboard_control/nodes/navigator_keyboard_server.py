@@ -46,8 +46,6 @@ class KeyboardServer(object):
         and control of the service is locked to it.
         '''
 
-        print req
-
         # If the key pressed was L, locks control of the service to the clinet's UUID
         if (req.keycode == 76):
 
@@ -81,7 +79,7 @@ class KeyboardServer(object):
             self.remote.station_hold()
         elif (key == ord('u')):
             self.remote.select_autonomous_control()
-        elif (key == ord('c')):
+        elif (key == ord('r')):
             self.remote.select_rc_control()
         elif (key == ord('b')):
             self.remote.select_keyboard_control()
@@ -98,9 +96,9 @@ class KeyboardServer(object):
         elif (key == ord('d')):
             self.remote.publish_wrench(0, -self.force_scale, 0)
         elif (key == curses.KEY_LEFT):
-            self.remote.publish_wrench(0, 0, -self.torque_scale)
-        elif (key == curses.KEY_RIGHT):
             self.remote.publish_wrench(0, 0, self.torque_scale)
+        elif (key == curses.KEY_RIGHT):
+            self.remote.publish_wrench(0, 0, -self.torque_scale)
 
         # Generates a wrench with zero force or torque if no motion key was pressed
         else:

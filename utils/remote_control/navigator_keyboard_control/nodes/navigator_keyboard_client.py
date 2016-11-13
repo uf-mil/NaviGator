@@ -9,7 +9,10 @@ useful feedback and captures key presses to be sent to the server.
 '''
 
 
+from __future__ import division
+
 import curses
+import uuid
 
 from navigator_msgs.srv import KeyboardControl
 import rospy
@@ -38,29 +41,37 @@ class KeyboardClient():
 
         self.keyboard_server = rospy.ServiceProxy('/keyboard_control', KeyboardControl)
 
-        doc_strings = ["Toggle Kill:          k",
-                       "Force Kill:           K",
-                       "Station Hold:         h",
-                       "Autonomous Control:   u",
-                       "RC Control:           r",
-                       "Keyboard Control:     b",
-                       "Cycle Control Device: c",
-                       "Move Forward:         w",
-                       "Move Backward:        s",
-                       "Move Port:            a",
-                       "Move Starboard:       d",
-                       "Yaw Counterclockwise: arrow up",
-                       "Yaw Clockwise:        arrow down"
-                       ]
+        self.help_menu = ["Lock:                 L          ",
+                          "Quit:                 q          ",
+                          "Toggle Kill:          k          ",
+                          "Force Kill:           K          ",
+                          "Station Hold:         h          ",
+                          "Autonomous Control:   u          ",
+                          "RC Control:           r          ",
+                          "Keyboard Control:     b          ",
+                          "Cycle Control Device: c          ",
+                          "Move Forward:         w          ",
+                          "Move Backward:        s          ",
+                          "Move Port:            a          ",
+                          "Move Starboard:       d          ",
+                          "Yaw Counterclockwise: arrow up   ",
+                          "Yaw Clockwise:        arrow down "
+                          ]
 
     def read_key(self):
+        '''
+        Reads the newest key from the buffer and discards all old keys that
+        were not read.
+        '''
         keycode = -1
         new_keycode = self.screen.getch()
 
+        # This eliminates building a buffer of keys that takes forever to process
         while(new_keycode != -1):
             keycode = new_keycode
             new_keycode = self.screen.getch()
 
+        # The 'q' key can be used to quit the program
         if (keycode == ord('q')):
             rospy.signal_shutdown("The user has closed the keyboard client")
 
@@ -84,27 +95,46 @@ class KeyboardClient():
             self.uuid = service_reply.generated_uuid
             self.refresh_status_text()
 
+        self.refresh_status_text()
+
     def refresh_status_text(self):
-        print "test"
-
-    def write_line(self, line_num, message):
-        if line_num < 0 or line_num >= self._num_lines:
-            raise ValueError('line out of bounds')
+        '''
+        Updates the status bar text, which consists of the UUID and the current
+        locked state, and a help menu of which key is used for what.
+        '''
+        uuid_string = "UUID: {}".format(self.uuid)
+        locked_string = "Locked: {}".format(self.is_locked)
         height, width = self.screen.getmaxyx()
-        y = (height / self.num_lines) * line_num
-        x = 2
-        for text in message.split('\n'):
-            text = text.ljust(width)
-            self._screen.addstr(y, x, text)
-            y += 1
+        self.clear()
 
-    def refresh(self):
-        self._screen.refresh()
+        # Prints the status bar text
+        if ((height >= 3) and (width >= 3 + len(uuid_string) + len(locked_string))):
+            y, x = 1, int((width - len(uuid_string) - len(locked_string)) / 3)
+            self.screen.addstr(y, x, uuid_string)
+            self.screen.addstr(y, 2 * x + len(uuid_string), locked_string)
+
+        index = 0
+        help_menu_rows = height - 3
+        help_menu_columns = int((width - 1) / len(self.help_menu[0]))
+
+        # Prints the help menu based on how many rows and columns are available in the space of the window
+        for row in range(help_menu_rows):
+            for column in range(help_menu_columns):
+                if (index < len(self.help_menu)):
+                    y, x = row + 3, 1 + column * len(self.help_menu[0])
+                    self.screen.addstr(y, x, self.help_menu[index])
+                    index += 1
 
     def flash(self):
+        '''
+        Flashes the color of the screen to white for a short time.
+        '''
         curses.flash()
 
     def clear(self):
+        '''
+        Clears all text on the screen.
+        '''
         self.screen.clear()
 
 

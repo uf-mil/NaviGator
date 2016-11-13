@@ -24,7 +24,9 @@
         <param name="torque_scale" value="500" type="double"/>
     </node>
 
-    <!--node name="lidar_ogrid_database" pkg="navigator_lidar_oa" type="lidar" /-->
+    <node pkg="navigator_keyboard_control" type="navigator_keyboard_server.py" name="keyboard_server" output="screen"/>
+
+    <node name="lidar_ogrid_database" pkg="navigator_lidar_oa" type="lidar" />
 
     <!-- Legacy - should be phased out -->
     <node pkg="kill_handling" type="kill_master" name="kill_master"/>
