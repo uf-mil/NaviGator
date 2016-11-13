@@ -43,6 +43,7 @@ add_service_files(
   ObjectDBQuery.srv
   CameraToLidarTransform.srv
   FindPinger.srv
+  KeyboardControl.srv
 )
 
 add_action_files(
