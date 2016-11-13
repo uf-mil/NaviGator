@@ -6,6 +6,7 @@ functions that are shared by the various remote control devices on NaviGator.
 '''
 
 
+import functools
 import itertools
 
 from geometry_msgs.msg import WrenchStamped
@@ -54,10 +55,10 @@ class RemoteControl(object):
         self.clear_wrench()
 
     def timeout_check(function):
-        def decorated_function(self):
-            if (not self.is_timed_out):
-                function(self)
-        return decorated_function
+        @functools.wraps(function)
+        def wrapper(self, *args, **kw):
+            return function(self, *args, **kw)
+        return wrapper
 
     def update_kill_status(self, alarm):
         '''
