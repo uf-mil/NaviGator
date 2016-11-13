@@ -1,35 +1,3 @@
-[] Exploring 
-	[] If we see no objects, move in some way
-	[] If we see multiple objects, pick the closest object, LOOK AT IT, tell the OC to begin classification, move towards it.
-
-	ROS SERVICE:
-		[] Turn off turn on
-
-[] OD
-	[X] Put GPS BB points as rosparams
-	[] OD only gives you objects that are far from the objects that you have already seen, and updates the positions of the old objects
-
-	[Xy] ROS Topics: List of objects, Marker Array
-
-[] OC
-
-	[] Buoy Field, Tower Buoys, Dock, STC, Shooter, Unknown
-
-	[] ROS Topics: 
-		[] Publishes name of object when it is found	
-		[] Publishes Marker Array of text for visualization
-
-	[] ROS Services:
-		[] 	Query to database
-
-	[] Do not add to launch file for now
-	RULES:
-		- take human input, lol this will work
-
-[] Mission System
-	[] Add to launch file
-
-
 [] Make a huge launch file 
 
 HOG Descriptors
@@ -53,17 +21,14 @@ Mission System V2
 Tests:
 
 
-- Test safe_exit is called after mission fails
-- test that mission stops after no more object dep is found
-- test that base mission stops when a new object is found
-- test that all missions run if everything is found
-- 
+[X] Test safe_exit is called after mission fails
+[X] test that mission stops after no more object dep is found
+[X] test that base mission stops when a new object is found
+[X] test that all missions run if everything is found
 
-to do
-
-- move all the missions to the other file
-- create test package 
-- add mission planner exit
+[X] move all the missions to the other file
+[X] create test package 
+[X] add mission planner exit
 
 
 

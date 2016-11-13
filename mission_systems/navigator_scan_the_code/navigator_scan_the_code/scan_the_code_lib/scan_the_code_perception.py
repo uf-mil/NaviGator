@@ -70,6 +70,7 @@ class ScanTheCodePerception(object):
         try:
             print "waiting on tf"
             trans = yield self.my_tf.get_transform("/stereo_left_cam", "/enu", time)
+	    print "done getting tf"
         except Exception as exp:
             print exp
             defer.returnValue(points_3d)
