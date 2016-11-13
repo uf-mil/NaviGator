@@ -17,12 +17,12 @@ import navigator_tools
 
 class DetectDeliverMission:
     # Note, this will be changed when the shooter switches to actionlib
-    shoot_distance_meters = 9
+    shoot_distance_meters = 3.3
     theta_offset = np.pi / 2.0
     spotings_req = 1
     circle_radius = 10
     search_timeout_seconds = 300
-    target_offset_meters = 0
+    target_offset_meters = -0.3
     #  normal_approx_tolerance_proportion = 0.035
 
     def __init__(self, navigator):
@@ -82,23 +82,23 @@ class DetectDeliverMission:
     @txros.util.cancellableInlineCallbacks
     def offset_for_target(self):   
         # Move off of center of shape to be centered with large target
-        move = self.navigator.move.forward(self.target_offset_meters)
-        marker = Marker()
-        marker.scale.x = 1;
-        marker.scale.y = .1;
-        marker.scale.z = .1;
-        marker.action = Marker.ADD;
-        marker.header.frame_id = "enu"
-        marker.header.stamp = self.navigator.nh.get_time()
-        marker.pose = self.navigator.move.goal.goal
-        marker.type = Marker.ARROW
-        marker.text = "Offset goal"
-        marker.ns = "detect_deliver"
-        marker.id = 3
-        marker.color.b = 1
-        marker.color.a = 1
-        self.markers.markers.append(marker)
-        yield move
+        yield self.navigator.move.forward(self.target_offset_meters).go()
+        #marker = Marker()
+        #marker.scale.x = 1;
+        #marker.scale.y = .1;
+        #marker.scale.z = .1;
+        #marker.action = Marker.ADD;
+        #marker.header.frame_id = "enu"
+        #marker.header.stamp = self.navigator.nh.get_time()
+        #marker.pose = self.navigator.move.goal.goal
+        #marker.type = Marker.ARROW
+        #marker.text = "Offset goal"
+        #marker.ns = "detect_deliver"
+        #marker.id = 3
+        #marker.color.b = 1
+        #marker.color.a = 1
+        #self.markers.markers.append(marker)
+        #yield move
 
     @txros.util.cancellableInlineCallbacks
     def is_found(self):
@@ -166,10 +166,11 @@ class DetectDeliverMission:
 
     @txros.util.cancellableInlineCallbacks
     def shoot_all_balls(self):
-        for i in range(1):
+        for i in range(4):
             goal = yield self.shooterLoad.send_goal(ShooterDoAction())
             print "LOAD", i
             res = yield goal.get_result()
+            yield self.navigator.nh.sleep(2)
             goal = yield self.shooterFire.send_goal(ShooterDoAction())
             print "FIRE", i
             res = yield goal.get_result()
@@ -182,7 +183,7 @@ class DetectDeliverMission:
         yield self.circle_search()  # Go to waypoint and circle until target found
         yield self.align_to_target()
         yield self.offset_for_target()  # Move a little bit forward to be centered to target
-        #yield self.shoot_all_balls()
+        yield self.shoot_all_balls()
         yield self.navigator.vision_proxies["get_shape"].stop()
 
 @txros.util.cancellableInlineCallbacks
