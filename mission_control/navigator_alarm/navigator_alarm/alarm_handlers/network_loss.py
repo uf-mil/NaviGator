@@ -8,10 +8,13 @@ class NetworkLossHandler(HandlerBase):
     alarm_name = 'network_loss'
 
     def __init__(self):
-        self.station_hold_alarm = self.alarm_broadcaster.add_alarm('station_hold', node_name="NetworkLossHandler")
+        self.kill = self.alarm_broadcaster.add_alarm('kill', node_name="NetworkLossHandler")
+        #self.station_hold_alarm = self.alarm_broadcaster.add_alarm('station_hold', node_name="NetworkLossHandler")
 
     def handle(self, alarm, time_sent, parameters):
-        self.station_hold_alarm.raise_alarm()
+        #self.station_hold_alarm.raise_alarm()
+        self.kill.raise_alarm()
+
 
     def cancel(self, alarm, time_sent, parameters):
         pass
