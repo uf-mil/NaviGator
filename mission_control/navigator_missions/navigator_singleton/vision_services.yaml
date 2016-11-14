@@ -25,3 +25,8 @@ coral_survey:
   topic: /vision/coral_survey
   type: GetDockShape
   args: {'Shape': "CIRCLE", 'Color':"ANY"}
+
+circle_totem:
+  topic: /vision/buoy_colorizer
+  type: ColorRequest
+  args: {}

@@ -3,17 +3,18 @@ import txros
 from twisted.internet import defer
 import numpy as np
 import navigator_tools
-from navigator_tools import fprint, MissingPerceptionObject
+from navigator_tools import fprint
 from sensor_msgs.msg import PointCloud
 import datetime
 
 @txros.util.cancellableInlineCallbacks
 def main(navigator):
     res = navigator.fetch_result()
-
+    
     buoy_field = yield navigator.database_query("BuoyField")
-    buoy_field_point = navigator_tools.point_to_numpy(buoy_field.objects[0])
+    assert buoy_field.found, "Buoy Field ROI not found"
 
+    buoy_field_point = navigator_tools.point_to_numpy(buoy_field.objects[0].position)
     #yield navigator.move.set_position(buoy_field_point).go()
 
     circle_colors = ['blue', 'red']
@@ -44,27 +45,51 @@ def main(navigator):
 
         # Now that we're looking him in the eyes, aim no higher.
         # Check the color and see if it's one we want.
-        fprint("Color request", title="CIRCLE_TOTEM")
+        temp_target_color = 'yellow'
+        for i in range(5):
+            fprint("Color request", title="CIRCLE_TOTEM")
+            resp = yield navigator.vision_proxies['circle_totem'].get_response(color=temp_target_color)
+
+            # Need to filter out bad hombres
+            
+            if not resp.found:
+                yield navigator.nh.sleep(5)
+                continue
+
+            target_ids = resp.ids
+            fprint("Response found. IDs : {}".format(target_ids))
+            totems = yield navigator.database_query("totem")
+            target_totems = [totem for totem in totems.objects if totem.id in target_ids]
+            target_totems_np = navigator_tools.point_to_numpy(target_totem.position)
+            print target_totems
+            pose = yield navigator.tx_pose
+            closest_totem = target_totems[np.argmin(np.linalg.norm(target_totems_np - pose[0]))]
+            closest_totem_np = navigator_tools.point_to_numpy(closest_totem.position)
+            explored_ids.append(closest_totem.id)
+
+            fprint("Color found!", msg_color='green', title="CIRCLE_TOTEM")
+            pattern = navigator.move.circle_point(closest_totem_np, radius=5)
+
+            for p in pattern:
+                yield p.go(move_type='skid', focus=closest_totem_np)
+                print "Nexting"
+
 
         #if target_totem is not None:
         #   all_found = True
             
     defer.returnValue(res)
 
-    pattern = navigator.move.circle_point(focus, radius=5)
-
-    for p in pattern:
-        yield p.go(move_type='skid', focus=focus)
-        print "Nexting"
-
 @txros.util.cancellableInlineCallbacks
 def get_closest_buoy(navigator, explored_ids):
     pose = yield navigator.tx_pose
     buoy_field = yield navigator.database_query("BuoyField")
+    assert buoy_field.found, "Buoy Field not found"
+
     buoy_field_np = navigator_tools.point_to_numpy(buoy_field.objects[0].position)
 
     # Find which totems we haven't explored yet
-    totems = yield navigator.database_query("totem", raise_exception=False)
+    totems = yield navigator.database_query("totem")
     if not totems.found:
         # Need to search for more totems
         defer.returnValue([None, explored_ids])

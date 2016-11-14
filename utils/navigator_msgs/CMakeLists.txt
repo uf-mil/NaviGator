@@ -44,6 +44,8 @@ add_service_files(
   CameraToLidarTransform.srv
   FindPinger.srv
   KeyboardControl.srv
+  SetFrequency.srv
+  ColorRequest.srv
 )
 
 add_action_files(

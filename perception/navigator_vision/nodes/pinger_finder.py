@@ -3,10 +3,11 @@ import rospy
 import numpy as np
 from numpy import linalg as npl
 import tf
-from navigator_msgs.srv import FindPinger
+from navigator_msgs.srv import FindPinger, SetFrequency, SetFrequencyResponse
 from hydrophones.msg import ProcessedPing
 from geometry_msgs.msg import Point, PoseStamped, Pose
 from visualization_msgs.msg import Marker
+from std_srvs.srv import SetBool, SetBoolResponse
 import navigator_tools
 
 target_freq = 35000
@@ -20,6 +21,7 @@ viz_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=10)
 point_distance = 10  # p1 is aling the direction of the pinger but we do not know the actual
                      # range p1 will be adjusted to be 'point_distance' away from p0
 debug_arrow_id = 0
+listen = False
 
 # line_arr represents the equation of a 2d line. Structure: [x1, y1, x2, y2]
 # Calculates the point in the plane with the least cummulative distance to
@@ -66,7 +68,7 @@ def find_pinger(arg):
 # to our line_arr linear equation system
 def ping_cb(processed_ping):
     global line_array, sample_amplitudes
-    # print "Got processed ping message:\n{}".format(processed_ping)
+    print "Got processed ping message:\n{}".format(processed_ping)
     if abs(processed_ping.freq - target_freq) < freq_tol and processed_ping.amplitude > min_amp:
         print "\x1b[34mTrustworthy pinger heading\x1b[0m"
         trans, rot = None, None
@@ -74,12 +76,19 @@ def ping_cb(processed_ping):
             tf_listener.waitForTransform("/enu", "/hydrophones", processed_ping.header.stamp, rospy.Duration(0.25))
             trans, rot = tf_listener.lookupTransform("/enu", "/hydrophones", processed_ping.header.stamp)
             p0 = np.array([trans[0], trans[1]])
-            delta = navigator_tools.point_to_numpy(processed_ping.position)[:2]
+            R = tf.transformations.quaternion_matrix(rot)[:3, :3]
+            print "quat: {} rot mat: {}".format(rot, R)
+            print "delta hyd frame: {}".format(processed_ping.position)
+            delta = R.dot(navigator_tools.point_to_numpy(processed_ping.position))[:2]
+            print "delta enu frame: {}".format(delta)
             p1 = p0 + point_distance * delta / npl.norm(delta)
             line_coeffs = np.array([[p0[0], p0[1], p1[0], p1[1]]]) # p0 and p1 define a line
             visualize_line(Point(p0[0], p0[1], 0), Point(p1[0], p1[1], 0))
-            line_array = np.append(line_array, line_coeffs, 0)
-            sample_amplitudes = np.append(sample_amplitudes, processed_ping.amplitude)
+            if listen:
+               line_array = np.append(line_array, line_coeffs, 0)
+               sample_amplitudes = np.append(sample_amplitudes, processed_ping.amplitude)
+            else:
+                print "Not currently listening"
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             print e
         # delete softest samples if we have over max_samples
@@ -102,12 +111,14 @@ def visualize_pinger(event):
     marker.scale.y = 1.0
     marker.scale.z = 1.0
     marker.color.g = 1.0
-    marker.color.b = 1.0
     marker.color.a = 1.0
     marker.pose.orientation.w = 1.0
     marker.pose.position = pinger_position
     if pinger_position != Point(0, 0, 0):
+        print "vis pinger"
         viz_pub.publish(marker)
+    else:
+        print "pinger position: {}".format(pinger_position)
 
 def visualize_line(p0, p1):
     global debug_arrow_id
@@ -119,6 +130,7 @@ def visualize_line(p0, p1):
     debug_arrow_id += 1
     marker.type = marker.ARROW
     marker.action = marker.ADD
+    marker.lifetime = rospy.Duration(10, 0)
     marker.points.append(p0)
     marker.points.append(p1)
     marker.scale.x = 0.5
@@ -127,13 +139,32 @@ def visualize_line(p0, p1):
     marker.color.g = 1.0
     marker.color.b = 1.0
     marker.color.a = 1.0
-    if pinger_position != Point(0, 0, 0):
-        viz_pub.publish(marker)
+    print "viz line"
+    viz_pub.publish(marker)
+    
+def set_listen(listen_status):
+    global listen
+    listen = listen_status.data
+    if listen:
+        print "PINGERFINDER: setting listening to on"
+    else:
+        print "PINGERFINDER: setting listening to off"
+    return {'success': True, 'message': ""}
+
+def set_freq(msg):
+    global target_freq, line_array, sample_amplitudes, pinger_position
+    target_freq = msg.frequency
+    line_array = np.empty((0, 4), float)
+    sample_amplitudes = np.empty((0, 0), float)
+    pinger_position = Point(0, 0, 0)
+    return SetFrequencyResponse()
 
 
 rospy.init_node('pinger_finder')
 tf_listener = tf.TransformListener()
 ping_sub = rospy.Subscriber("/hydrophones/processed", ProcessedPing, callback=ping_cb)
-pinger_finder = rospy.Service('hydrophones/find_pinger', FindPinger, find_pinger)
+pinger_finder_srv = rospy.Service('hydrophones/find_pinger', FindPinger, find_pinger)
+activate_listening = rospy.Service('hydrophones/set_listen', SetBool, set_listen)
+set_freq_srv = rospy.Service('hydrophones/set_freq', SetFrequency, set_freq)
 pinger_viz = rospy.Timer(rospy.Duration(0.3), visualize_pinger)
 rospy.spin()

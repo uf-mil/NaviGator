@@ -1,6 +1,8 @@
 string target_name
+int32 target_id
 ---
 # Pose, stamped at the time of image receipt
 geometry_msgs/PoseStamped pose
 geometry_msgs/Vector3 covariance_diagonal
+string color
 bool found

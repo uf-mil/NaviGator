@@ -117,7 +117,7 @@ def main(navigator):
         through_vector = through_vector / np.linalg.norm(through_vector)
 
     #print mid_point
-    setup_dist = 20  # Line up with the start gate this many meters infront of the gate.
+    setup_dist = 10  # Line up with the start gate this many meters infront of the gate.
     setup = f_mid_point - f_direction_vector * setup_dist
     if four_mode:
         target = b_mid_point + through_vector * setup_dist
@@ -143,10 +143,11 @@ def main(navigator):
     print "publishing"
     latched = navigator.latching_publisher("/mission_ogrid", OccupancyGrid, msg)
 
-    yield navigator.nh.sleep(5)
+    yield navigator.nh.sleep(1)
 
     print "START_GATE: Moving in 5 seconds!"
-    yield navigator.move.set_position(target).go(initial_plan_time=5)
+    #yield navigator.move.set_position(target).go(initial_plan_time=5)
+    yield navigator.move.forward(40).go(initial_plan_time=5)
     return_with(result)
 
 
