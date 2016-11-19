@@ -38,9 +38,6 @@ def myfunc(navigator, **kwargs):
     center_marker = kwargs["center_marker"]
     looking_for = kwargs["looking_for"]
 
-    # center_marker = "Scan_The_Code"
-    # looking_for = "scan_the_code"
-
     db = yield DBHelper(navigator.nh).init_(navigator=navigator)
     objs = yield db.get_unknown_and_low_conf()
     print[x.name for x in objs]
@@ -49,9 +46,7 @@ def myfunc(navigator, **kwargs):
 
     if len(objs) == 0:
         fprint("SPIRALING, NO OBJECTS FOUND", msg_color="green")
-        # UNCOMMENT
         yield navigator.move.spiral(nt.rosmsg_to_numpy(center_marker.position)).go()
-        # navigator.nh.sleep(20)
 
     position = yield navigator.tx_pose
     position = position[0]
@@ -65,8 +60,8 @@ def myfunc(navigator, **kwargs):
 
 @txros.util.cancellableInlineCallbacks
 def main(navigator, **kwargs):
+    navigator.change_wrench("autonomous")
     yield navigator.nh.sleep(.1)
-
     good = True
     try:
         yield util.wrap_timeout(myfunc(navigator, **kwargs), 60)

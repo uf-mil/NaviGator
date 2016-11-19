@@ -31,10 +31,9 @@ def _get_color(c):
 
 @txros.util.cancellableInlineCallbacks
 def main(navigator, **kwargs):
-    # attempts = kwargs["attempts"]
     """Main Script of Scan The Code."""
-    # UNCOMMENT
-    # navigator.change_wrench("autonomous")
+    # attempts = kwargs["attempts"]
+    navigator.change_wrench("autonomous")
     fprint("Moving to stc", msg_color='green')
     pub = yield navigator.nh.advertise("/stc/pose", PoseStamped)
     mission = ScanTheCodeMission(navigator)
@@ -44,15 +43,12 @@ def main(navigator, **kwargs):
     yield navigator.nh.sleep(1)
     _publish_pose(pub, initial_pose)
     fprint("Finished getting the initial position", msg_color='green')
-    # UNCOMMENT
-    # yield navigator.move.set_position(pose).look_at(look_at).go()
-    # circle = navigator.move.circle_point(look_at, 8, granularity=30).go()
-    # circle.addErrback(lambda x: x)
-
+    circle = navigator.move.circle_point(look_at).go()
+    circle.addErrback(lambda x: x)
     yield mission.correct_pose(pose)
 
     # UNCOMMENT
-    # circle.cancel()
+    circle.cancel()
 
     fprint("Finished getting the correct stc face", msg_color='green')
     colors = yield mission.find_colors()
