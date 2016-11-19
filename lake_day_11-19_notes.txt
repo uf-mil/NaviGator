@@ -1,0 +1,7 @@
+- Acoustic pinger add to launch / frekin' pr already 
+- get shooter balistics / is tf good?
+- PR pinger in so launched
+- Lidar fixes 
+- sanity check normal (why was pointing straight down????)
+- Bad right cam tf still????
+- 

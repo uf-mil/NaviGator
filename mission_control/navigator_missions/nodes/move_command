@@ -20,7 +20,11 @@ def main(args):
 
     n = yield Navigator(nh)._init(args.sim)
 
-    action_kwargs = {'move_type': args.movetype, 'speed_factor': args.speedfactor}
+    action_kwargs = {'move_type': args.movetype}#, 'speed_factor': args.speedfactor}
+    
+    #if args.speedfactor is not None:
+    #    speed_factor = np.array(map(float, args.speedfactor[1:-1].split(',')))
+    #    action_kwargs = {'speed_factor', args.speedfactor}
 
     if args.blind is not None:
         action_kwargs['blind'] = args.blind

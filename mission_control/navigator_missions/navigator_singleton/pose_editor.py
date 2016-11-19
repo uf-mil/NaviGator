@@ -258,14 +258,14 @@ class PoseEditor2(object):
     def circle_point(self, point, *args, **kwargs):
         return self.spiral_point(point, *args, **kwargs)
    
-    def d_spiral_point(self, point, radius, granularity=8, revolutions=1, theat_offset=0, meters_per_rev=0):
+    def d_spiral_point(self, point, radius, granularity=8, revolutions=1, theta_offset=0, meters_per_rev=0):
         """
         Sprials a point using discrete moves
         This produces a generator
         """
         point = np.array(point)
         angle_incrment = 2 * np.pi / granularity
-        sprinkles = transformations.euler_matrix(0, 0, angle_incrment)[:3, :3]
+        sprinkles = transformations.euler_matrix(0, 0, -angle_incrment)[:3, :3]
 
         # Find first point to go to using boat rotation
         next_point = np.append(normalize(self.nav.pose[0][:2] - point[:2]), 0)  # Doing this in 2d
@@ -289,7 +289,7 @@ class PoseEditor2(object):
             for p in circle:
                 yield p.go()
         """
-        return d_spiral_point(*args, **kwargs)
+        return self.d_spiral_point(*args, **kwargs)
 
     def as_MoveToGoal(self, linear=[0, 0, 0], angular=[0, 0, 0], **kwargs):
         return MoveToGoal(
