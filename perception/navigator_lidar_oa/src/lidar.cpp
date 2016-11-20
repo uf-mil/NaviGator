@@ -62,8 +62,8 @@ interactive_markers::MenuHandler::EntryHandle menuEntry;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Lake Day 11-12
 //Eigen::Vector2d BOUNDARY_CORNER_1 (-20, -135);
-//Eigen::Vector2d BOUNDARY_CORNER_2 (-20, 45);
-//Eigen::Vector2d BOUNDARY_CORNER_3 (140, 45);
+//Eigen::Vector2d BOUNDARY_CORNER_2 (-20, 65);
+//Eigen::Vector2d BOUNDARY_CORNER_3 (140, 65);
 //Eigen::Vector2d BOUNDARY_CORNER_4 (140, -135);
 
 //Lake Day 11-19
