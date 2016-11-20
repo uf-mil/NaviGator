@@ -156,25 +156,25 @@ class Navigator(object):
         else:
             fprint("No bounds param found, defaulting to none.", title="NAVIGATOR")
             self.enu_bounds = None
-
+ 
     @util.cancellableInlineCallbacks
     def database_query(self, object_name=None, raise_exception=True, **kwargs):
         if object_name is not None:
             kwargs['name'] = object_name
             res = yield self._database_query(navigator_srvs.ObjectDBQueryRequest(**kwargs))
-
+            
             if not res.found and raise_exception:
                 raise MissingPerceptionObject(kwargs['name'])
 
             defer.returnValue(res)
-
+        
         res = yield self._database_query(navigator_srvs.ObjectDBQueryRequest(**kwargs))
         defer.returnValue(res)
 
     def vision_request(self, request_name, **kwargs):
         fprint("DEPRECATED: Please use new dictionary based system.")
         return self.vision_proxies[request_name].get_response(**kwargs)
-
+    
     def change_wrench(self, source):
         return self._change_wrench(navigator_srvs.WrenchSelectRequest(source))
 
@@ -246,9 +246,7 @@ class Navigator(object):
         fprint("\tkill :", newline=False)
         fprint(self.killed)
 
-
 class VisionProxy(object):
-
     def __init__(self, client, request, args, switch):
         self.client = client
         self.request = request
@@ -268,9 +266,7 @@ class VisionProxy(object):
 
         return self.client(s_req)
 
-
 class MissionParam(object):
-
     def __init__(self, nh, param, options, desc, default):
         self.nh = nh
         self.param = param
@@ -278,7 +274,7 @@ class MissionParam(object):
         self.description = desc
         self.default = default
         if not self.default == None:
-            self.set(self.default)
+          self.set(self.default)
 
     @util.cancellableInlineCallbacks
     def get(self):
@@ -287,8 +283,7 @@ class MissionParam(object):
             raise Exception("Mission Param {} not yet set".format(self.param))
         value = yield self.nh.get_param(self.param)
         if not self._valid(value):
-            raise Exception("Value {} is invalid for param {}\nValid values: {}\nDescription: {}".format(
-                value, self.param, self.options, self.description))
+            raise Exception("Value {} is invalid for param {}\nValid values: {}\nDescription: {}".format(value, self.param, self.options,self.description))
         else:
             defer.returnValue(value)
 
@@ -296,10 +291,9 @@ class MissionParam(object):
         return self.nh.has_param(self.param)
 
     @util.cancellableInlineCallbacks
-    def set(self, value):
+    def set(self,value):
         if not self._valid(value):
-            raise Exception("Value {} is invalid for param {}\nValid values: {}\nDescription: {}".format(
-                value, self.param, self.options, self.description))
+            raise Exception("Value {} is invalid for param {}\nValid values: {}\nDescription: {}".format(value, self.param, self.options,self.description))
         yield self.nh.set_param(self.param, value)
 
     @util.cancellableInlineCallbacks
@@ -316,11 +310,11 @@ class MissionParam(object):
     def reset(self):
         if (yield self.exists()):
             if not self.default == None:
-                yield self.set(self.default)
+              yield self.set(self.default)
             else:
-                yield self.nh.delete_param(self.param)
+              yield self.nh.delete_param(self.param)
 
-    def _valid(self, value):
+    def _valid(self,value):
         for x in self.options:
             if x == value:
                 return True
@@ -328,7 +322,6 @@ class MissionParam(object):
 
 
 class Searcher(object):
-
     def __init__(self, nav, vision_proxy, search_pattern, **kwargs):
         self.nav = nav
         self.vision_proxy = vision_proxy
@@ -399,6 +392,8 @@ class Searcher(object):
                 yield util.cancellableInlineCallbacks(pattern)()
         else:
             yield util.cancellableInlineCallbacks(pattern)()
+
+
 
     @util.cancellableInlineCallbacks
     def _run_look(self, spotings_req):
