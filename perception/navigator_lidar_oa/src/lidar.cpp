@@ -60,15 +60,23 @@ interactive_markers::MenuHandler::EntryHandle menuEntry;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //These are changed on startup if /get_bounds service is present
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Eigen::Vector2d BOUNDARY_CORNER_1 (30-60+10-190, 10-185);
-Eigen::Vector2d BOUNDARY_CORNER_2 (30-60+10-190, 120-105);
-Eigen::Vector2d BOUNDARY_CORNER_3 (140-10+10-190, 120-105);
-Eigen::Vector2d BOUNDARY_CORNER_4 (140-10+10-190, 10-185);
+//Lake Day 11-12
+//Eigen::Vector2d BOUNDARY_CORNER_1 (-20, -135);
+//Eigen::Vector2d BOUNDARY_CORNER_2 (-20, 45);
+//Eigen::Vector2d BOUNDARY_CORNER_3 (140, 45);
+//Eigen::Vector2d BOUNDARY_CORNER_4 (140, -135);
 
-//Eigen::Vector2d BOUNDARY_CORNER_1 (0, 0);
-//Eigen::Vector2d BOUNDARY_CORNER_2 (1, 0);
-//Eigen::Vector2d BOUNDARY_CORNER_3 (1, -1);
-//Eigen::Vector2d BOUNDARY_CORNER_4 (0, -1);
+//Lake Day 11-19
+//Eigen::Vector2d BOUNDARY_CORNER_1 (-210, -175);
+//Eigen::Vector2d BOUNDARY_CORNER_2 (-210, 15);
+//Eigen::Vector2d BOUNDARY_CORNER_3 (-50, 15);
+//Eigen::Vector2d BOUNDARY_CORNER_4 (-50, -175);
+
+//No bounds on start
+Eigen::Vector2d BOUNDARY_CORNER_1 (0, 0);
+Eigen::Vector2d BOUNDARY_CORNER_2 (1, 0);
+Eigen::Vector2d BOUNDARY_CORNER_3 (1, -1);
+Eigen::Vector2d BOUNDARY_CORNER_4 (0, -1);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Forward declare
