@@ -186,7 +186,7 @@ class OccupancyGrid
 			    Eigen::Vector2d am = b1 - point;
 			    //Valid lidar points are inside bounding box or within X meters of the boat
 		     	if( (0 <= ab.dot(am) && ab.dot(am) <= ab.dot(ab) && 0 <= am.dot(ac) && am.dot(ac) <= ac.dot(ac)) || (xyz_in_velodyne.norm() <= 15) ){
-					if (xyz_in_velodyne.norm() >= 1 && xyz_in_velodyne.norm() <= 100 && xyz_in_enu(2) >= lidarPos.z-MAXIMUM_Z_BELOW_LIDAR && xyz_in_enu(2) <= lidarPos.z+MAXIMUM_Z_ABOVE_LIDAR) {
+					if (xyz_in_velodyne.norm() >= LIDAR_MIN_VIEW_DISTANCE_METERS && xyz_in_velodyne.norm() <= 100 && xyz_in_enu(2) >= lidarPos.z-MAXIMUM_Z_BELOW_LIDAR && xyz_in_enu(2) <= lidarPos.z+MAXIMUM_Z_ABOVE_LIDAR) {
 						auto valid = xyz_in_velodyne.norm() < LIDAR_CONFIDENCE_DISTANCE_METERS && goodLidarReading == true;
 						updateGrid(LidarBeam(xyz_in_enu(0), xyz_in_enu(1),xyz_in_enu(2),i.f,valid),max_hits);
 					}
@@ -232,7 +232,7 @@ class OccupancyGrid
 				int x = floor(p.x/VOXEL_SIZE_METERS + GRID_SIZE/2);
 				int y = floor(p.y/VOXEL_SIZE_METERS + GRID_SIZE/2);
 				if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-					ogrid[y][x].hits += 5;
+					ogrid[y][x].hits += LIDAR_HITS_INCREMENT;
 					pointCloudTable[y*GRID_SIZE+x].update(p);
 					pointCloudTable_Uno[y*GRID_SIZE+x].push_back(p);
 					if (ogrid[y][x].hits > max_hits) { ogrid[y][x].hits = max_hits; }	

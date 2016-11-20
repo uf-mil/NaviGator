@@ -60,10 +60,10 @@ interactive_markers::MenuHandler::EntryHandle menuEntry;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //These are changed on startup if /get_bounds service is present
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Eigen::Vector2d BOUNDARY_CORNER_1 (30-60, 10-140);
-Eigen::Vector2d BOUNDARY_CORNER_2 (30-60, 120-60);
-Eigen::Vector2d BOUNDARY_CORNER_3 (140-10, 120-60);
-Eigen::Vector2d BOUNDARY_CORNER_4 (140-10, 10-140);
+Eigen::Vector2d BOUNDARY_CORNER_1 (30-60+10-0, 10-140);
+Eigen::Vector2d BOUNDARY_CORNER_2 (30-60+10-0, 120-60);
+Eigen::Vector2d BOUNDARY_CORNER_3 (140-10+10-0, 120-60);
+Eigen::Vector2d BOUNDARY_CORNER_4 (140-10+10-0, 10-140);
 
 //Eigen::Vector2d BOUNDARY_CORNER_1 (0, 0);
 //Eigen::Vector2d BOUNDARY_CORNER_2 (1, 0);
@@ -144,7 +144,7 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 	std::vector< std::vector<int> > cc = ConnectedComponents(ogrid,objects,MIN_OBJECT_SEPERATION_DISTANCE);
 
 	//Deflate(erode) ogrid before sending out to ROS
-	ogrid.deflateBinary();
+	//ogrid.deflateBinary();
 
 	//Publish second point cloud
 	sensor_msgs::PointCloud objectCloudPersist,objectCloudFrame,pclCloud;
@@ -493,9 +493,9 @@ void createROIS(string name, bool update, geometry_msgs::Pose newPose)
   	controlm.always_visible = true;
   	controlm.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_3D;
 	visualization_msgs::Marker m4;
-	m4.header.stamp = ros::Time::now();
-	m4.header.seq = 0;
-	m4.header.frame_id = "enu";		
+	//m4.header.stamp = ros::Time::now();
+	//m4.header.seq = 0;
+	//m4.header.frame_id = "enu";		
 	m4.id = -1;
 	m4.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
 	m4.action = visualization_msgs::Marker::ADD;
