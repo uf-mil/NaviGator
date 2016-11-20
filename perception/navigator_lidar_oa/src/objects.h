@@ -105,6 +105,7 @@ public:
 				obj.locked = min_obj->locked;
 				obj.real = min_obj->real;
 			    obj.confidence = min_obj->confidence;
+			    obj.bestConfidence = min_obj->bestConfidence;
                 *min_obj = obj;
 			} else if (badPersist == false)  {
 				obj.id = curr_id++;
@@ -205,6 +206,7 @@ public:
 				thisOne.pclInliers = s_obj.pclInliers;
 				thisOne.normal = s_obj.normal;
 				thisOne.color = s_obj.color;
+				thisOne.confidence = s_obj.bestConfidence;
 				objects.push_back(thisOne);
 			}
 		}

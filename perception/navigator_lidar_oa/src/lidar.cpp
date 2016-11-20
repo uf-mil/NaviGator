@@ -67,16 +67,16 @@ interactive_markers::MenuHandler::EntryHandle menuEntry;
 //Eigen::Vector2d BOUNDARY_CORNER_4 (140, -135);
 
 //Lake Day 11-19
-//Eigen::Vector2d BOUNDARY_CORNER_1 (-210, -175);
-//Eigen::Vector2d BOUNDARY_CORNER_2 (-210, 15);
-//Eigen::Vector2d BOUNDARY_CORNER_3 (-50, 15);
-//Eigen::Vector2d BOUNDARY_CORNER_4 (-50, -175);
+Eigen::Vector2d BOUNDARY_CORNER_1 (-210, -175);
+Eigen::Vector2d BOUNDARY_CORNER_2 (-210, 15);
+Eigen::Vector2d BOUNDARY_CORNER_3 (-50, 15);
+Eigen::Vector2d BOUNDARY_CORNER_4 (-50, -175);
 
 //No bounds on start
-Eigen::Vector2d BOUNDARY_CORNER_1 (0, 0);
-Eigen::Vector2d BOUNDARY_CORNER_2 (1, 0);
-Eigen::Vector2d BOUNDARY_CORNER_3 (1, -1);
-Eigen::Vector2d BOUNDARY_CORNER_4 (0, -1);
+//Eigen::Vector2d BOUNDARY_CORNER_1 (0, 0);
+//Eigen::Vector2d BOUNDARY_CORNER_2 (1, 0);
+//Eigen::Vector2d BOUNDARY_CORNER_3 (1, -1);
+//Eigen::Vector2d BOUNDARY_CORNER_4 (0, -1);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Forward declare
@@ -261,7 +261,7 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 		}
 
 		//Display Info//obj.strikesPersist.size() << "(" << obj.strikesFrame.size() << ") points, size "
-		ROS_INFO_STREAM("LIDAR | "  << fixed  << setw(10) << obj.name.substr(0,4) << ": " << obj.id << "\t" << obj.position.x << "\t" << obj.position.y << "\t" << obj.position.z << "\t" << obj.maxHeightFromLidar << "\t" << obj.scale.x << "\t" << obj.scale.y << "\t" << obj.scale.z << "\t" << obj.confidence[0] << "\t" << obj.confidence[1] << "\t" << obj.confidence[2] << "\t" << obj.confidence[3] << "\t" << obj.confidence[4] << "\t " << obj.strikesPersist.size());
+		ROS_INFO_STREAM("LIDAR | "  << fixed  << setw(10) << obj.name.substr(0,4) << ": " << obj.id << "\t" << obj.position.x << "\t" << obj.position.y << "\t" << obj.position.z << "\t" << obj.maxHeightFromLidar << "\t" << obj.scale.x << "\t" << obj.scale.y << "\t" << obj.scale.z << "\t" << obj.confidence[0] << "\t" << obj.confidence[1] << "\t" << obj.confidence[2] << "\t" << obj.confidence[3] << "\t" << obj.confidence[4] << "\t " << obj.strikesPersist.size() << "\t" << (int)obj.bestConfidence);
 
 		//Show point cloud of just objects
 		objectCloudPersist.points.insert(objectCloudPersist.points.end(),obj.strikesPersist.begin(),obj.strikesPersist.end());

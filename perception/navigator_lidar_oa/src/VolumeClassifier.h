@@ -49,12 +49,15 @@ void VolumeClassifier(objectMessage &object)
 
     //Confidence has to meet minimum threshold before being selected
     object.name = "unknown";
+    object.bestConfidence = 0;
     for (auto ii = 0; ii < names.size(); ++ii) {
         if (ii < names.size()-1 && object.confidence[ii] >= MIN_HITS_FOR_VOLUME && object.confidence[ii] > object.confidence[ii+1]/2 ) { 
             object.name = names[ii];
+            object.bestConfidence = (double)object.confidence[ii]/std::accumulate(object.confidence.begin(),object.confidence.end(),0.0)*255;
             break;
        } else if (ii == names.size()-1 && object.confidence[ii] >= MIN_HITS_FOR_VOLUME) {
             object.name = names[ii];
+            object.bestConfidence = (double)object.confidence[ii]/std::accumulate(object.confidence.begin(),object.confidence.end(),0.0)*255;
             break;       	
        } 
     }
