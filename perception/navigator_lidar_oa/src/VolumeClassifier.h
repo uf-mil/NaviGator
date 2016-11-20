@@ -33,7 +33,7 @@ void VolumeClassifier(objectMessage &object)
 	double volumes[5][8] = { 	{1.0,	1.5,	8.0,	10.0,	8.0,	10.0,	2.75,	3.25}, //dock (NOT TESTED!)
 					{0.75,	2.25,	3.0,	5.5,	3.0,	5.5,	2.5,	5.5}, //shooter
 					{0.05,	0.75,	1.3,	2.25,	1.3,	2.25,	1.7,	2.5}, //scan_the_code
-					{-0.45,	0.0,	0.8,	1.8,	0.8,	1.8,	0.8,	1.8}, //totems
+					{-0.6,	0.0,	0.8,	1.8,	0.8,	1.8,	0.8,	1.8}, //totems
 					{-1.25,-0.8,	0.125,	1.0,	0.125,	1.0,	0.125,	0.65} }; //buoy
 
 	//Update confidence for each type of object
@@ -50,7 +50,7 @@ void VolumeClassifier(objectMessage &object)
     //Confidence has to meet minimum threshold before being selected
     object.name = "unknown";
     for (auto ii = 0; ii < names.size(); ++ii) {
-        if (ii < names.size()-1 && object.confidence[ii] >= MIN_HITS_FOR_VOLUME && object.confidence[ii] > 2*object.confidence[ii+1] ) { 
+        if (ii < names.size()-1 && object.confidence[ii] >= MIN_HITS_FOR_VOLUME && object.confidence[ii] > object.confidence[ii+1]/2 ) { 
             object.name = names[ii];
             break;
        } else if (ii == names.size()-1 && object.confidence[ii] >= MIN_HITS_FOR_VOLUME) {

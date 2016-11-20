@@ -60,10 +60,10 @@ interactive_markers::MenuHandler::EntryHandle menuEntry;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //These are changed on startup if /get_bounds service is present
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Eigen::Vector2d BOUNDARY_CORNER_1 (30-60+10-0, 10-140);
-Eigen::Vector2d BOUNDARY_CORNER_2 (30-60+10-0, 120-60);
-Eigen::Vector2d BOUNDARY_CORNER_3 (140-10+10-0, 120-60);
-Eigen::Vector2d BOUNDARY_CORNER_4 (140-10+10-0, 10-140);
+Eigen::Vector2d BOUNDARY_CORNER_1 (30-60+10-190, 10-185);
+Eigen::Vector2d BOUNDARY_CORNER_2 (30-60+10-190, 120-105);
+Eigen::Vector2d BOUNDARY_CORNER_3 (140-10+10-190, 120-105);
+Eigen::Vector2d BOUNDARY_CORNER_4 (140-10+10-190, 10-185);
 
 //Eigen::Vector2d BOUNDARY_CORNER_1 (0, 0);
 //Eigen::Vector2d BOUNDARY_CORNER_2 (1, 0);
@@ -493,8 +493,8 @@ void createROIS(string name, bool update, geometry_msgs::Pose newPose)
   	controlm.always_visible = true;
   	controlm.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_3D;
 	visualization_msgs::Marker m4;
-	//m4.header.stamp = ros::Time::now();
-	//m4.header.seq = 0;
+	m4.header.stamp = ros::Time::now();
+	m4.header.seq = 0;
 	//m4.header.frame_id = "enu";		
 	m4.id = -1;
 	m4.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
