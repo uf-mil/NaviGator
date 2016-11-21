@@ -78,8 +78,10 @@ class Joystick(object):
         rc_control = bool(joy.buttons[11])  # d-pad left
         auto_control = bool(joy.buttons[12])  # d-pad right
         keyboard_control = bool(joy.buttons[14])  # d-pad down
-        shooter_load = bool(joy.buttons[4])
-        shooter_fire = bool(joy.axes[5] < -0.9)
+        #shooter_load = bool(joy.buttons[4])
+        shooter_load = False
+        #shooter_fire = bool(joy.axes[5] < -0.9)
+        shooter_fire = False
         shooter_cancel = bool(joy.buttons[5])
 
         # Reset controller state if only start is pressed down about 3 seconds

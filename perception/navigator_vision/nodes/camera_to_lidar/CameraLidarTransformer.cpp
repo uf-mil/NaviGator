@@ -45,6 +45,13 @@ bool CameraLidarTransformer::transformServiceCallback(navigator_msgs::CameraToLi
     res.error =  navigator_msgs::CameraToLidarTransform::Response::CLOUD_NOT_FOUND;
     return true;
   }
+  if (!tfBuffer.canTransform(req.header.frame_id, "velodyne", req.header.stamp, ros::Duration(1)))
+  {
+    res.success = false;
+    res.error = "NO TRANSFORM";
+    std::cout << "Camera Time: " << req.header.stamp << std::endl;
+    return true;
+  }
   geometry_msgs::TransformStamped transform = tfBuffer.lookupTransform(req.header.frame_id, "velodyne", req.header.stamp);
   sensor_msgs::PointCloud2 cloud_transformed;
   tf2::doTransform(*scloud, cloud_transformed, transform);

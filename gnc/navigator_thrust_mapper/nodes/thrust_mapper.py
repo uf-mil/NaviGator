@@ -119,7 +119,6 @@ class Mapper(object):
             # must transpose to stack correctly
             thruster_column = np.transpose(np.array([[cos, sin, torque_effect]]))
             thruster_matrix.append(thruster_column)
-
         # returns a matrix made of the thruster collumns
         return np.hstack(thruster_matrix)
 
@@ -132,7 +131,7 @@ class Mapper(object):
 
         # solve Ax = b
         # solutions are given respectively by thruster pose
-        bl, br, fl, fr = np.linalg.lstsq(A, b)[0]
+        bl, br, fr = np.linalg.lstsq(A, b)[0]
 
         # Temporarily sending the left thruster command to the motor driver
         BL_msg, BR_msg, FL_msg, FR_msg = Command(), Command(), Command(), Command()
@@ -142,24 +141,24 @@ class Mapper(object):
         # assign to ROS messages
         BL_msg.setpoint = np.clip(bl * self.effort_ratio, -self.effort_limit, self.effort_limit)
         BR_msg.setpoint = np.clip(br * self.effort_ratio, -self.effort_limit, self.effort_limit)
-        FL_msg.setpoint = np.clip(fl * self.effort_ratio, -self.effort_limit, self.effort_limit)
+        #FL_msg.setpoint = np.clip(fl * self.effort_ratio, -self.effort_limit, self.effort_limit)
         FR_msg.setpoint = np.clip(fr * self.effort_ratio, -self.effort_limit, self.effort_limit)
 
         # publish ROS messages
         if self.kill is True:
             self.BL_pub.publish(Command(setpoint=0))
             self.BR_pub.publish(Command(setpoint=0))
-            self.FL_pub.publish(Command(setpoint=0))
+            #self.FL_pub.publish(Command(setpoint=0))
             self.FR_pub.publish(Command(setpoint=0))
         elif self.docking_alarm is True:
             self.BL_pub.publish(BL_msg)
             self.BR_pub.publish(BR_msg)
-            self.FL_pub.publish(Command(setpoint=0))
+            #self.FL_pub.publish(Command(setpoint=0))
             self.FR_pub.publish(Command(setpoint=0))
         else:
             self.BL_pub.publish(BL_msg)
             self.BR_pub.publish(BR_msg)
-            self.FL_pub.publish(FL_msg)
+            #self.FL_pub.publish(FL_msg)
             self.FR_pub.publish(FR_msg)
 
 
@@ -184,11 +183,11 @@ if __name__ == "__main__":
     # Create four thruster objects
     BL = Thruster(thruster_BL_cog, thruster_BL_theta)
     BR = Thruster(thruster_BR_cog, thruster_BR_theta)
-    FL = Thruster(thruster_FL_cog, thruster_FL_theta)
+    #FL = Thruster(thruster_FL_cog, thruster_FL_theta)
     FR = Thruster(thruster_FR_cog, thruster_FR_theta)
 
     # Put the thrusters in a list and give them to the mapper
-    thrusters = [BL, BR, FL, FR]
+    thrusters = [BL, BR, FR]
     mapper = Mapper(thrusters, effort_ratio, effort_limit)
     
     # Required in order to get feedback from motors

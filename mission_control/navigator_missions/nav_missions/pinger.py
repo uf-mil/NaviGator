@@ -80,7 +80,7 @@ class PingerMission:
         yield self.get_observation_poses()
         for i,p in enumerate(self.observation_points):
             yield self.stop_listen()
-            yield self.navigator.move.set_position(p).look_at(self.look_at_points[i]).go(move_type="skid")
+            yield self.navigator.move.set_position(p).look_at(self.look_at_points[i]).go()
             yield self.start_listen()
             fprint("PINGER: Listening To Pinger at point {}".format(p), msg_color='green')
             yield self.navigator.nh.sleep(self.LISTEN_TIME)
@@ -105,7 +105,7 @@ class PingerMission:
             yield self.navigator.move.set_position(p).go(initial_plan_time=5)
 
     @txros.util.cancellableInlineCallbacks
-    def new_marker(self, ns="/debug", frame="/enu", type = Marker.CUBE , position=(0,0,0), orientation=(0,0,0,1), color=(1,0,0)):
+    def new_marker(self, ns="/debug", frame="enu", type = Marker.CUBE , position=(0,0,0), orientation=(0,0,0,1), color=(1,0,0)):
         marker = Marker()
         marker.ns = ns
         marker.header.stamp = yield self.navigator.nh.get_time()
@@ -164,7 +164,7 @@ class PingerMission:
     @txros.util.cancellableInlineCallbacks
     def set_active_pinger(self):
         """Set the paramter for the active pinger identified for use in other mission"""
-        yield self.navigator.mission_params["acoustic_pinger_active_index"].set(self.gate_index+1)
+        yield self.navigator.mission_params["acoustic_pinger_active_index"].set(int(self.gate_index)+1)
         yield self.get_colored_buoys()
 
     @txros.util.cancellableInlineCallbacks

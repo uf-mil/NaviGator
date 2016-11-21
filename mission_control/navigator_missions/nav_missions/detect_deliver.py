@@ -63,7 +63,7 @@ class DetectDeliverMission:
         print "Starting circle search"
         #yield self.navigator.move.look_at(navigator_tools.rosmsg_to_numpy(self.waypoint_res.objects[0].position)).go()
         pattern = self.navigator.move.d_circle_point(navigator_tools.rosmsg_to_numpy(
-            self.waypoint_res.objects[0].position), radius=self.circle_radius,  theta_offset=self.theta_offset)
+            self.waypoint_res.objects[0].position), radius=self.circle_radius,  theta_offset=self.theta_offset,direction='cw')
         yield next(pattern).go()
         searcher = self.navigator.search(
             vision_proxy='get_shape', search_pattern=pattern, Shape=self.Shape, Color=self.Color)
@@ -106,8 +106,10 @@ class DetectDeliverMission:
 
     @txros.util.cancellableInlineCallbacks
     def get_normal(self):
+        print "fuck ", self.found_shape
         req = CameraToLidarTransformRequest()
         req.header = self.found_shape.header
+        req.header.frame_id = "right_right_cam"
         req.point = Point()
         req.point.x = self.found_shape.CenterX
         req.point.y = self.found_shape.CenterY
@@ -119,11 +121,11 @@ class DetectDeliverMission:
             self.shooter_baselink_tf = yield self.navigator.tf_listener.get_transform('/base_link','/shooter')
             self.enunormal = enu_cam_tf.transform_vector(navigator_tools.rosmsg_to_numpy(self.normal_res.normal))
             self.enupoint = enu_cam_tf.transform_point(navigator_tools.rosmsg_to_numpy(self.normal_res.closest))
-        defer.returnValue(self.normal_res.success and abs(self.normal_res.normal[2]) < .5)
+        defer.returnValue(self.normal_res.success and abs(navigator_tools.rosmsg_to_numpy(self.normal_res.normal)[2]) < .5)
 
     @txros.util.cancellableInlineCallbacks
     def shoot_all_balls(self):
-        for i in range(4):
+        for i in range(1):
             goal = yield self.shooterLoad.send_goal(ShooterDoAction())
             fprint("Loading Shooter {}".format(i), title="DETECT DELIVER",  msg_color='green')
             res = yield goal.get_result()
@@ -144,11 +146,11 @@ class DetectDeliverMission:
 
 @txros.util.cancellableInlineCallbacks
 def setup_mission(navigator):
-    color = yield navigator.mission_params["scan_the_code_color3"].get()
-    fprint("Setting search color to scan the code color 3 = {}".format(color), title="DETECT DELIVER",  msg_color='green')
+    #color = yield navigator.mission_params["scan_the_code_color3"].get()
+    #fprint("Setting search color to scan the code color 3 = {}".format(color), title="DETECT DELIVER",  msg_color='green')
     fprint("Setting search shape ANY", title="DETECT DELIVER",  msg_color='green')
-    yield navigator.mission_params["detect_deliver_shape"].set("ANY")
-    yield navigator.mission_params["detect_deliver_color"].set(color)
+    yield navigator.mission_params["detect_deliver_shape"].set("CROSS")
+    yield navigator.mission_params["detect_deliver_color"].set("ANY")
 
 @txros.util.cancellableInlineCallbacks
 def main(navigator, **kwargs):
