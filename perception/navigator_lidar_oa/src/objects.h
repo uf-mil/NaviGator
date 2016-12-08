@@ -51,10 +51,10 @@ public:
     ////////////////////////////////////////////////////////////
 	void reset()
 	{
-		curr_id = 10;
+		curr_id = ROIS.size();
 		foundGates = false;
 		gatePositions.clear();
-		saved_objects.erase(saved_objects.begin()+10,saved_objects.end());		
+		saved_objects.erase(saved_objects.begin()+ROIS.size(),saved_objects.end());		
 	}
 
 	////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ public:
     /// \param ?
     /// \param ?
     ////////////////////////////////////////////////////////////
-	std::vector<objectMessage> add_objects(std::vector<objectMessage> objects, sensor_msgs::PointCloud &rosCloud, const geometry_msgs::Pose &boatPose_enu)
+	std::vector<objectMessage> add_objects(std::vector<objectMessage> objects, sensor_msgs::PointCloud &rosCloud)
 	{
 		//Reset all saved objects to not seen
 		for(auto &s_obj : saved_objects) {
@@ -81,8 +81,8 @@ public:
             bool badPersist = false;
 			for(auto &s_obj : saved_objects){
 				auto xyDistance = sqrt( pow(obj.position.x - s_obj.position.x, 2) + pow(obj.position.y - s_obj.position.y, 2) );
-				auto persistMax = 1.0+std::max(obj.strikesPersist.size(),s_obj.strikesPersist.size());
-				auto persistMin = 1.0+std::min(obj.strikesPersist.size(),s_obj.strikesPersist.size());
+				auto persistMax = 1.0+std::max(obj.persist.size(),s_obj.persist.size());
+				auto persistMin = 1.0+std::min(obj.persist.size(),s_obj.persist.size());
 				if(xyDistance < min_dist) {
                     if (persistMin/persistMax >= 0.20) {
 					    min_dist = xyDistance;
@@ -95,7 +95,7 @@ public:
 
 			//If the saved object was within in the minimum threshold, update the database. Otherwise, create a new object
 			if (min_obj != nullptr && min_dist < diff_thresh) {
-				ROS_INFO_STREAM("LIDAR : Updating " << min_obj->name << " with " << obj.strikesPersist.size() << " vs the old " << min_obj->strikesPersist.size());
+				ROS_INFO_STREAM("LIDAR | Updating " << min_obj->name << " with " << obj.persist.size() << " vs the old " << min_obj->persist.size());
 				obj.name = min_obj->name;
 				obj.id = min_obj->id;
 				obj.normal = min_obj->normal;
@@ -108,9 +108,12 @@ public:
 			    obj.bestConfidence = min_obj->bestConfidence;
                 *min_obj = obj;
 			} else if (badPersist == false)  {
+				ROS_INFO_STREAM("LIDAR | Creating new object in database with id " << curr_id);
 				obj.id = curr_id++;
 				obj.current = true;
 				saved_objects.push_back(obj);
+			} else {
+				ROS_INFO_STREAM("LIDAR | Object rejected from database... ");
 			}
 		}
 
@@ -201,9 +204,12 @@ public:
 				thisOne.size.z = s_obj.scale.z;
 				thisOne.size.x = s_obj.scale.x;
 				thisOne.size.y = s_obj.scale.y;
-				thisOne.points = s_obj.strikesFrame;
-				thisOne.intensity = s_obj.intensityFrame;
-				thisOne.pclInliers = s_obj.pclInliers;
+				for (auto &next : s_obj.persist) {
+					geometry_msgs::Point32 p; p.x = next.x; p.y = next.y; p.z = next.z;
+					thisOne.points.push_back(p);
+					thisOne.intensity.push_back(next.i);
+				}
+				//thisOne.pclInliers = s_obj.pclInliers;
 				thisOne.normal = s_obj.normal;
 				thisOne.color = s_obj.color;
 				thisOne.confidence = s_obj.bestConfidence;
