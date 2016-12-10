@@ -28,30 +28,15 @@ struct objectMessage
 		frame.insert(frame.end(),strikes.begin(),strikes.end());	
 	}
 	bool dimensions() {
-		//
 		std::multiset<double> xAll,yAll,zAll,xClose,yClose,zClose;
 		std::unordered_map<int,unsigned> map;
 		size_t cnt = 0;
 		for (auto p = persist.begin(); p != persist.end(); ++p, ++cnt) {
-			//if (true) {
-			if (fabs(p->boatAnglesDot.roll) <= 0.004 && fabs(p->boatAnglesDot.pitch) <= 0.009 && fabs(p->boatAnglesDot.yaw) <= 0.008 ) {
-				xAll.insert(p->x); yAll.insert(p->y); zAll.insert(p->z);
-				if (p->d <= LIDAR_CONFIDENCE_DISTANCE_METERS) {
-					xClose.insert(p->x); yClose.insert(p->y); zClose.insert(p->z);	
-					//++map[floor(p->z/VOXEL_SIZE_Z_METERS)];
-				}
+			xAll.insert(p->x); yAll.insert(p->y); zAll.insert(p->z);
+			if (fabs(p->boatAnglesDot.roll) <= MAX_XY_ANGUlAR_VELOCITY_RAD_S && fabs(p->boatAnglesDot.pitch) <= MAX_XY_ANGUlAR_VELOCITY_RAD_S && fabs(p->boatAnglesDot.yaw) <= MAX_Z_ANGUlAR_VELOCITY_RAD_S && p->d <= LIDAR_CONFIDENCE_DISTANCE_METERS) {
+				xClose.insert(p->x); yClose.insert(p->y); zClose.insert(p->z);	
 			}
 		}
-
-		//REMOVE OUTLIERS		
-/*		auto removed = 0;
-		for (auto it = z.begin(); it != z.end(); ) {
-			if (map[floor(*it/VOXEL_SIZE_Z_METERS)] < VOXEL_SIZE_Z_MIN_HITS) {
-				it = z.erase(it); ++removed;
-			} else {
-				++it;
-			}
-		}*/
 
 		if (xAll.size() > 1 && yAll.size() > 1 && zAll.size() > 1) {
 			scaleAll.x = *(--xAll.end()) - *xAll.begin(); position.x = *xAll.begin() + scaleAll.x/2;
@@ -66,9 +51,8 @@ struct objectMessage
 			scaleClose.z = *(--zClose.end()) - *zClose.begin(); position.z = *zClose.begin() + scaleClose.z/2;
 			scale = scaleClose;
 		}
-
-		ROS_INFO_STREAM("LIDAR | All   DIMENSIONS -> " << scaleAll.x << "\t" << scaleAll.y << "\t" << scaleAll.z);
-		ROS_INFO_STREAM("LIDAR | Close DIMENSIONS -> " << scaleClose.x << "\t" << scaleClose.y << "\t" << scaleClose.z);
+		//ROS_INFO_STREAM("LIDAR | All   DIMENSIONS -> " << scaleAll.x << "\t" << scaleAll.y << "\t" << scaleAll.z);
+		//ROS_INFO_STREAM("LIDAR | Close DIMENSIONS -> " << scaleClose.x << "\t" << scaleClose.y << "\t" << scaleClose.z);
 		return true;
 	}
 
@@ -219,10 +203,10 @@ std::vector< std::vector<int> > ConnectedComponents(OccupancyGrid &ogrid, std::v
 		}*/
 
 		if (obj.scaleAll.z >= MIN_OBJECT_HEIGHT_METERS && isNewObject) {
-			ROS_INFO_STREAM("LIDAR | CC New object added!");
+			//ROS_INFO_STREAM("LIDAR | CC New object added!");
 			objects.push_back(obj);
 		} else {
-			ROS_INFO_STREAM("LIDAR | CC Object rejected...");
+			//ROS_INFO_STREAM("LIDAR | CC Object rejected...");
 		}
 	}
 	return cc;

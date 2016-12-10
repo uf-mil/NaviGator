@@ -33,4 +33,8 @@ extern int OBJECT_INFLATION_PARAMETER;
 extern double VOXEL_SIZE_Z_METERS;
 extern double VOXEL_SIZE_Z_MIN_HITS;
 extern double volumes[5][8];
+//New params
+extern double MAX_DISTANCE_FROM_ROI;
+extern double MAX_XY_ANGUlAR_VELOCITY_RAD_S;
+extern double MAX_Z_ANGUlAR_VELOCITY_RAD_S;
 #endif

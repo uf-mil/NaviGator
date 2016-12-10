@@ -34,7 +34,7 @@ void VolumeClassifier(objectMessage &object)
     std::vector<std::string> classifications = {"dock","shooter","scan_the_code","totem","buoy","large","medium","small"};
 
     //Update object confidnce using all lidar data
-    if (dzAll > 3.25) {
+    if (dzAll > 2.75) {
         ++object.confidence[5];
     } else if (dzAll > 0.9) {
         ++object.confidence[6];
@@ -61,7 +61,7 @@ void VolumeClassifier(objectMessage &object)
     auto d = std::distance(object.confidence.begin(),std::max_element(object.confidence.begin(),object.confidence.begin()+4));
     if (object.confidence[d] > MIN_HITS_FOR_VOLUME) {
             object.name = classifications[d];
-            object.bestConfidence = (double)object.confidence[d]/std::accumulate(object.confidence.begin(),object.confidence.end()+4,0.0)*255;
+            object.bestConfidence = (double)object.confidence[d] / std::accumulate(object.confidence.begin(),object.confidence.begin()+4,0.0)*255.0;
     } else {
         auto d2 = std::distance(object.confidence.begin(),std::max_element(object.confidence.begin()+5,object.confidence.end()));
         object.name = classifications[d2];

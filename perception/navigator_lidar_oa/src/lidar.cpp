@@ -34,7 +34,7 @@
 #include "objects.h"
 #include "lidarParams.h"
 #include "stateTracker.h"
-#define DATA_DUMP
+
 
 using namespace std;
 
@@ -97,7 +97,6 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 	static tf2_ros::Buffer tfBuffer;
 	static tf2_ros::TransformListener tfListener(tfBuffer);
 
-	ros::Time timer2 = ros::Time::now();
 	geometry_msgs::TransformStamped T_enu_velodyne_ros;
 	try {
 		//T_enu_velodyne_ros = tfBuffer.lookupTransform("enu", "velodyne",ros::Time(0)); //change time to pcloud header? pcloud->header.stamp 
@@ -444,9 +443,9 @@ int main(int argc, char* argv[])
 		createROIS(ROIS[ii]);
 	}	
 
-	//Check for ROS params
-	//if (!nh.getParam("MAP_SIZE_METERS", MAP_SIZE_METERS)) { std::cout << "not set " << std::endl; }
+	//Check for ROS params - Uncomment when ready!
 	/*
+	if (!nh.getParam("MAP_SIZE_METERS", MAP_SIZE_METERS)) { std::cout << "not set " << std::endl; }
 	nh.getParam("MAP_SIZE_METERS", MAP_SIZE_METERS);
 	nh.getParam("ROI_SIZE_METERS", ROI_SIZE_METERS);
 	nh.getParam("VOXEL_SIZE_METERS", VOXEL_SIZE_METERS);

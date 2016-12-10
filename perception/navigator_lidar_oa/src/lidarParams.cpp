@@ -27,8 +27,11 @@ int MIN_HITS_FOR_VOLUME = 31;
 int OBJECT_INFLATION_PARAMETER = 2;
 double VOXEL_SIZE_Z_METERS = 0.15;
 double VOXEL_SIZE_Z_MIN_HITS = 10;
-double volumes[5][8] = { 	{1.0,	1.5,	8.0,	10.0,	8.0,	10.0,	2.75,	3.25}, //dock (NOT TESTED!)
-        {0.75,	2.25,	3.0,	5.5,	3.0,	5.5,	2.5,	5.5}, //shooter
-        {0.1,	0.75,	1.3,	2.25,	1.3,	2.25,	1.95,	2.5}, //scan_the_code
-        {-0.6,	0.0,	0.8,	1.8,	0.8,	1.8,	0.8,	1.9}, //totems
-        {-1.25,-0.8,	0.125,	1.0,	0.125,	1.0,	0.125,	0.65} }; //buoy
+double volumes[5][8] = { 	{1.0,	1.5,	8.0,	10.0,	8.0,	10.0,	2.75,	3.25}, //dock - NEEDS TO CHANGE FOR HAWAII
+        {0.75,	2.25,	3.0,	5.5,	3.0,	5.5,	2.5,	5.5}, //shooter - NEEDS TO CHANGE FOR HAWAII
+        {0.1,	0.75,	1.3,	2.75,	1.3,	2.75,	2.05,	2.5}, //scan_the_code - NEEDS TO CHANGE FOR HAWAII
+        {-0.6,	0.0,	0.8,	1.8,	0.8,	1.8,	0.8,	1.95}, //totems - NEEDS TO CHANGE FOR HAWAII
+        {-1.25,-0.8,	0.125,	1.0,	0.125,	1.0,	0.125,	0.65} }; //buoy - NEEDS TO CHANGE FOR HAWAII
+double MAX_DISTANCE_FROM_ROI = 40;
+double MAX_XY_ANGUlAR_VELOCITY_RAD_S = 0.008;
+double MAX_Z_ANGUlAR_VELOCITY_RAD_S = 0.025;

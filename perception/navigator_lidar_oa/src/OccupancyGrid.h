@@ -48,7 +48,7 @@ struct cell
 struct beamEntry
 {
 	void update(const LidarBeam &beam) {
-		if (q.size() >= 1000) { q.pop_front(); }
+		if (q.size() >= 75) { q.pop_front(); }
 		q.push_back(beam);
 	}
 
