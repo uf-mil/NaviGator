@@ -84,12 +84,12 @@ public:
 				auto persistMax = 1.0+std::max(obj.persist.size(),s_obj.persist.size());
 				auto persistMin = 1.0+std::min(obj.persist.size(),s_obj.persist.size());
 				if(xyDistance < min_dist) {
-                    if (persistMin/persistMax >= 0.20) {
+                    //if (persistMin/persistMax >= 0.20) {
 					    min_dist = xyDistance;
 					    min_obj = &s_obj;
-                    } else {
-                        badPersist = true;
-                    }
+                    //} else {
+                    //    badPersist = true;
+                    //}
 				}
 			}
 

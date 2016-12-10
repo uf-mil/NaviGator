@@ -29,41 +29,51 @@ struct objectMessage
 	}
 	bool dimensions() {
 		//
-		if (persist.size() <= 7) { return false; }
-
-		//
-		std::multiset<double> x,y,z;
+		std::multiset<double> xAll,yAll,zAll,xClose,yClose,zClose;
 		std::unordered_map<int,unsigned> map;
 		size_t cnt = 0;
 		for (auto p = persist.begin(); p != persist.end(); ++p, ++cnt) {
-			if ( true ) {
-				x.insert(p->x);
-				y.insert(p->y);
-				z.insert(p->z);
-				++map[floor(p->z/VOXEL_SIZE_Z_METERS)];
+			//if (true) {
+			if (fabs(p->boatAnglesDot.roll) <= 0.004 && fabs(p->boatAnglesDot.pitch) <= 0.009 && fabs(p->boatAnglesDot.yaw) <= 0.008 ) {
+				xAll.insert(p->x); yAll.insert(p->y); zAll.insert(p->z);
+				if (p->d <= LIDAR_CONFIDENCE_DISTANCE_METERS) {
+					xClose.insert(p->x); yClose.insert(p->y); zClose.insert(p->z);	
+					//++map[floor(p->z/VOXEL_SIZE_Z_METERS)];
+				}
 			}
 		}
-		if (!x.size() || !y.size() || !z.size()) { return false; }
 
 		//REMOVE OUTLIERS		
-		auto removed = 0;
+/*		auto removed = 0;
 		for (auto it = z.begin(); it != z.end(); ) {
 			if (map[floor(*it/VOXEL_SIZE_Z_METERS)] < VOXEL_SIZE_Z_MIN_HITS) {
 				it = z.erase(it); ++removed;
 			} else {
 				++it;
 			}
-		}
-		if (!z.size()) { return false; }
+		}*/
 
-		scale.x = *(--x.end()) - *x.begin(); position.x = *x.begin() + scale.x/2;
-		scale.y = *(--y.end()) - *y.begin(); position.y = *y.begin() + scale.y/2;
-		scale.z = *(--z.end()) - *z.begin(); position.z = *z.begin() + scale.z/2;
-		ROS_INFO_STREAM("LIDAR | DIMENSIONS -> " << x.size() << "\t" << scale.x << "\t" << scale.y << "\t" << scale.z << " with " << removed);
+		if (xAll.size() > 1 && yAll.size() > 1 && zAll.size() > 1) {
+			scaleAll.x = *(--xAll.end()) - *xAll.begin(); position.x = *xAll.begin() + scaleAll.x/2;
+			scaleAll.y = *(--yAll.end()) - *yAll.begin(); position.y = *yAll.begin() + scaleAll.y/2;
+			scaleAll.z = *(--zAll.end()) - *zAll.begin(); position.z = *zAll.begin() + scaleAll.z/2;
+			scale = scaleAll;
+		}
+
+		if (xClose.size() > 1 && yClose.size() > 1 && zClose.size() > 1) {
+			scaleClose.x = *(--xClose.end()) - *xClose.begin(); position.x = *xClose.begin() + scaleClose.x/2;
+			scaleClose.y = *(--yClose.end()) - *yClose.begin(); position.y = *yClose.begin() + scaleClose.y/2;
+			scaleClose.z = *(--zClose.end()) - *zClose.begin(); position.z = *zClose.begin() + scaleClose.z/2;
+			scale = scaleClose;
+		}
+
+		ROS_INFO_STREAM("LIDAR | All   DIMENSIONS -> " << scaleAll.x << "\t" << scaleAll.y << "\t" << scaleAll.z);
+		ROS_INFO_STREAM("LIDAR | Close DIMENSIONS -> " << scaleClose.x << "\t" << scaleClose.y << "\t" << scaleClose.z);
 		return true;
 	}
+
 	geometry_msgs::Point position;
-	geometry_msgs::Vector3 scale;
+	geometry_msgs::Vector3 scale,scaleAll,scaleClose;
 	std::vector<LidarBeam> persist;
 	std::vector<LidarBeam> frame;
 	std_msgs::ColorRGBA color;
@@ -76,7 +86,7 @@ struct objectMessage
 	bool locked = false;
 	bool real = true;
 	ros::Time age;
-    std::array<size_t,5> confidence{ {0,0,0,0,0} };
+    std::array<size_t,8> confidence{ {0,0,0,0,0,0,0,0} };
     uint8_t bestConfidence = 0;
 };
 
@@ -184,7 +194,7 @@ std::vector< std::vector<int> > ConnectedComponents(OccupancyGrid &ogrid, std::v
 		bool isNewObject = true;
 		objectMessage obj = ii.second;
 		obj.age = ros::Time::now();
-		obj.maxHeightFromLidar = (ii.second.scale.z/2+ii.second.position.z)-ogrid.lidarPos.z;
+		//obj.maxHeightFromLidar = (ii.second.scale.z/2+ii.second.position.z)-ogrid.lidarPos.z;
 		//Is this object really part of another one?
 		/*
 		for (auto &jj : objects) {
@@ -208,7 +218,7 @@ std::vector< std::vector<int> > ConnectedComponents(OccupancyGrid &ogrid, std::v
 			}
 		}*/
 
-		if (obj.scale.z >= MIN_OBJECT_HEIGHT_METERS && isNewObject) {
+		if (obj.scaleAll.z >= MIN_OBJECT_HEIGHT_METERS && isNewObject) {
 			ROS_INFO_STREAM("LIDAR | CC New object added!");
 			objects.push_back(obj);
 		} else {

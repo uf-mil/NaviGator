@@ -13,8 +13,8 @@ double MAXIMUM_Z_BELOW_LIDAR = 2.25;
 double MAXIMUM_Z_ABOVE_LIDAR = 2.5;
 double MAX_ROLL_PITCH_ANGLE_DEG = 2.5;
 double LIDAR_VIEW_ANGLE_DEG = 160;
-double LIDAR_VIEW_DISTANCE_METERS = 60;
-double LIDAR_CONFIDENCE_DISTANCE_METERS = 40;
+double LIDAR_VIEW_DISTANCE_METERS = 20;
+double LIDAR_CONFIDENCE_DISTANCE_METERS = 20;
 double LIDAR_MIN_VIEW_DISTANCE_METERS = 5.5;
 int MIN_LIDAR_POINTS_FOR_OCCUPANCY = 10;
 double MIN_OBJECT_HEIGHT_METERS = 0.15;
@@ -29,6 +29,6 @@ double VOXEL_SIZE_Z_METERS = 0.15;
 double VOXEL_SIZE_Z_MIN_HITS = 10;
 double volumes[5][8] = { 	{1.0,	1.5,	8.0,	10.0,	8.0,	10.0,	2.75,	3.25}, //dock (NOT TESTED!)
         {0.75,	2.25,	3.0,	5.5,	3.0,	5.5,	2.5,	5.5}, //shooter
-        {0.1,	0.75,	1.3,	2.25,	1.3,	2.25,	1.7,	2.5}, //scan_the_code
-        {-0.6,	0.0,	0.8,	1.8,	0.8,	1.8,	0.8,	1.8}, //totems
+        {0.1,	0.75,	1.3,	2.25,	1.3,	2.25,	1.95,	2.5}, //scan_the_code
+        {-0.6,	0.0,	0.8,	1.8,	0.8,	1.8,	0.8,	1.9}, //totems
         {-1.25,-0.8,	0.125,	1.0,	0.125,	1.0,	0.125,	0.65} }; //buoy

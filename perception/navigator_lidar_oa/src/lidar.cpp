@@ -66,11 +66,11 @@ interactive_markers::MenuHandler::EntryHandle menuEntry;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //These are changed on startup if /get_bounds service is present
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Lake Day 11-12
-Eigen::Vector2d BOUNDARY_CORNER_1 (-20, -135);
-Eigen::Vector2d BOUNDARY_CORNER_2 (-20, 65);
-Eigen::Vector2d BOUNDARY_CORNER_3 (140, 65);
-Eigen::Vector2d BOUNDARY_CORNER_4 (140, -135);
+//Lake Day 11-20
+Eigen::Vector2d BOUNDARY_CORNER_1 (-210+200, -175-30);
+Eigen::Vector2d BOUNDARY_CORNER_2 (-210+200, 15-30);
+Eigen::Vector2d BOUNDARY_CORNER_3 (-50+200, 15-30);
+Eigen::Vector2d BOUNDARY_CORNER_4 (-50+200, -175-30);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Forward declare
@@ -93,12 +93,11 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 	ROS_INFO("**********************************************************");
 	ROS_INFO("LIDAR | cb_velodyne...");	
 
-	//Measure elapsed time for function
-	ros::Time timer = ros::Time::now();
-
 	//Use ROS transform listener to grad up-to-date transforms between reference frames
 	static tf2_ros::Buffer tfBuffer;
 	static tf2_ros::TransformListener tfListener(tfBuffer);
+
+	ros::Time timer2 = ros::Time::now();
 	geometry_msgs::TransformStamped T_enu_velodyne_ros;
 	try {
 		//T_enu_velodyne_ros = tfBuffer.lookupTransform("enu", "velodyne",ros::Time(0)); //change time to pcloud header? pcloud->header.stamp 
@@ -107,6 +106,8 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
       ROS_ERROR("%s",ex.what());
       return;
     }
+	//Measure elapsed time for function
+	ros::Time timer = ros::Time::now();
 
     //Convert ROS transform to eigen transform
     Eigen::Affine3d T_enu_velodyne(Eigen::Affine3d::Identity());
@@ -250,7 +251,7 @@ void cb_velodyne(const sensor_msgs::PointCloud2ConstPtr &pcloud)
 		}
 
 		//Display Info//obj.strikesPersist.size() << "(" << obj.strikesFrame.size() << ") points, size "
-		ROS_INFO_STREAM("LIDAR | "  << fixed  << setw(10) << obj.name.substr(0,4) << ": " << obj.id << "\t" << obj.position.x << "\t" << obj.position.y << "\t" << obj.position.z << "\t" << obj.maxHeightFromLidar << "\t" << obj.scale.x << "\t" << obj.scale.y << "\t" << obj.scale.z << "\t" << obj.confidence[0] << "\t" << obj.confidence[1] << "\t" << obj.confidence[2] << "\t" << obj.confidence[3] << "\t" << obj.confidence[4] << "\t " << obj.persist.size() << "\t" << (int)obj.bestConfidence);
+		ROS_INFO_STREAM("LIDAR | "  << fixed  << setw(10) << obj.name.substr(0,4) << ": " << obj.id << "\t" << obj.position.x << "\t" << obj.position.y << "\t" << obj.position.z << "\t" << obj.maxHeightFromLidar << "\t" << obj.scale.x << "\t" << obj.scale.y << "\t" << obj.scale.z << "\t" << obj.confidence[0] << "\t" << obj.confidence[1] << "\t" << obj.confidence[2] << "\t" << obj.confidence[3] << "\t" << obj.confidence[4] << "\t " << obj.confidence[5] << "\t" << obj.confidence[6] << "\t" << obj.confidence[7] << "\t" << obj.persist.size() << "\t" << (int)obj.bestConfidence);
 
 		#ifdef DATA_DUMP
 		if (dumpData) {
@@ -485,32 +486,6 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Helper function for making interactive markers

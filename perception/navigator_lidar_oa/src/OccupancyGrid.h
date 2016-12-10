@@ -27,8 +27,8 @@ struct LidarBeam
 	LidarBeam(ros::Time t_, size_t iter_, Eigen::Vector3d pos, double d_, int i_, rpy boatAnglesDot_) : t(t_),iter(iter_),x(pos[0]),y(pos[1]),z(pos[2]),d(d_),i(i_),boatAnglesDot(boatAnglesDot_) {}
 	ros::Time t;
 	size_t iter;
-	double x,y,z,d;
-	int i;
+	float x,y,z,d;
+	uint8_t i;
 	rpy boatAnglesDot;
 	bool confident;
 };
@@ -48,13 +48,13 @@ struct cell
 struct beamEntry
 {
 	void update(const LidarBeam &beam) {
-		if (q.size() >= 10000) { q.pop_front(); }
+		if (q.size() >= 1000) { q.pop_front(); }
 		q.push_back(beam);
 	}
 
-	double height() {
+	float height() {
 		if (!q.size()) { return 0; }
-		double highZ = q[0].z, lowZ = q[0].z;
+		float highZ = q[0].z, lowZ = q[0].z;
 		for_each(q.begin(),q.end(),[&highZ,&lowZ](LidarBeam l) {
 			highZ = std::max(l.z,highZ);
 			lowZ = std::min(l.z,lowZ);
