@@ -66,11 +66,11 @@ interactive_markers::MenuHandler::EntryHandle menuEntry;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //These are changed on startup if /get_bounds service is present
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Lake Day 11-20
-Eigen::Vector2d BOUNDARY_CORNER_1 (-210+200, -175-30);
-Eigen::Vector2d BOUNDARY_CORNER_2 (-210+200, 15-30);
-Eigen::Vector2d BOUNDARY_CORNER_3 (-50+200, 15-30);
-Eigen::Vector2d BOUNDARY_CORNER_4 (-50+200, -175-30);
+//No bounds on start
+Eigen::Vector2d BOUNDARY_CORNER_1 (0, 0);
+Eigen::Vector2d BOUNDARY_CORNER_2 (1, 0);
+Eigen::Vector2d BOUNDARY_CORNER_3 (1, -1);
+Eigen::Vector2d BOUNDARY_CORNER_4 (0, -1);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Forward declare
@@ -444,7 +444,6 @@ int main(int argc, char* argv[])
 	}	
 
 	//Check for ROS params - Uncomment when ready!
-	/*
 	if (!nh.getParam("MAP_SIZE_METERS", MAP_SIZE_METERS)) { std::cout << "not set " << std::endl; }
 	nh.getParam("MAP_SIZE_METERS", MAP_SIZE_METERS);
 	nh.getParam("ROI_SIZE_METERS", ROI_SIZE_METERS);
@@ -478,7 +477,6 @@ int main(int argc, char* argv[])
 		ROIS.clear();
 		nh.getParam("ROIS", ROIS);
 	}
-	*/
 
 	//Give control to ROS
 	ros::spin();
