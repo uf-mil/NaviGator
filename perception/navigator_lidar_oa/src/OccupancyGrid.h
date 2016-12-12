@@ -17,15 +17,19 @@
 #include <fstream>
 #include <sstream>
 #include "lidarParams.h"
+#include "stateTracker.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct LidarBeam
 {
-	LidarBeam() = default;
-	LidarBeam(double x_, double y_, double z_, double i_, bool confident_) : x(x_),y(y_),z(z_),i(i_),confident(confident_) {}
-	double x,y,z,i;
+	LidarBeam(ros::Time t_, size_t iter_, Eigen::Vector3d pos, double d_, int i_, rpy boatAnglesDot_) : t(t_),iter(iter_),x(pos[0]),y(pos[1]),z(pos[2]),d(d_),i(i_),boatAnglesDot(boatAnglesDot_) {}
+	ros::Time t;
+	size_t iter;
+	float x,y,z,d;
+	uint8_t i;
+	rpy boatAnglesDot;
 	bool confident;
 };
 
@@ -44,13 +48,13 @@ struct cell
 struct beamEntry
 {
 	void update(const LidarBeam &beam) {
-		if (q.size() >= 10) { q.pop_front(); }
+		if (q.size() >= 75) { q.pop_front(); }
 		q.push_back(beam);
 	}
 
-	double height() {
+	float height() {
 		if (!q.size()) { return 0; }
-		double highZ = q[0].z, lowZ = q[0].z;
+		float highZ = q[0].z, lowZ = q[0].z;
 		for_each(q.begin(),q.end(),[&highZ,&lowZ](LidarBeam l) {
 			highZ = std::max(l.z,highZ);
 			lowZ = std::min(l.z,lowZ);
@@ -115,10 +119,10 @@ class OccupancyGrid
 	    /// \param ?
 	    /// \param ?
 	    ////////////////////////////////////////////////////////////
-		void updatePoints(const std::vector<LidarBeam> &xyz, int max_hits)
+		void updatePoints(const std::vector<LidarBeam> &xyz)
 		{
 			for (auto p : xyz)
-				updateGrid(p,max_hits);
+				updateGrid(p);
 		}
 
 		////////////////////////////////////////////////////////////
@@ -145,8 +149,11 @@ class OccupancyGrid
 	    /// \param ?
 	    ////////////////////////////////////////////////////////////
 		#ifndef OPENCV_IRA
-		void updatePointsAsCloud(const sensor_msgs::PointCloud2ConstPtr &cloud, Eigen::Affine3d T, int max_hits, double MAXIMUM_Z_BELOW_LIDAR, double MAXIMUM_Z_ABOVE_LIDAR) 
+		void updatePointsAsCloud(const sensor_msgs::PointCloud2ConstPtr &cloud, Eigen::Affine3d T, ros::Time t, rpy boatAngles_dot) 
 		{
+			//Track iterations
+			++iterations; 
+
 			//Reset point cloud table uno
 			pointCloudTable_Uno.clear();
 
@@ -187,8 +194,7 @@ class OccupancyGrid
 			    //Valid lidar points are inside bounding box or within X meters of the boat
 		     	if( (0 <= ab.dot(am) && ab.dot(am) <= ab.dot(ab) && 0 <= am.dot(ac) && am.dot(ac) <= ac.dot(ac)) || (xyz_in_velodyne.norm() <= 15) ){
 					if (xyz_in_velodyne.norm() >= LIDAR_MIN_VIEW_DISTANCE_METERS && xyz_in_velodyne.norm() <= 100 && xyz_in_enu(2) >= lidarPos.z-MAXIMUM_Z_BELOW_LIDAR && xyz_in_enu(2) <= lidarPos.z+MAXIMUM_Z_ABOVE_LIDAR) {
-						auto valid = xyz_in_velodyne.norm() < LIDAR_CONFIDENCE_DISTANCE_METERS && goodLidarReading == true;
-						updateGrid(LidarBeam(xyz_in_enu(0), xyz_in_enu(1),xyz_in_enu(2),i.f,valid),max_hits);
+						updateGrid( LidarBeam(t,iterations,xyz_in_enu,xyz_in_velodyne.norm(),i.f,boatAngles_dot) );
 					}
 		     	}
 			}
@@ -227,7 +233,7 @@ class OccupancyGrid
 	    /// \param ?
 	    /// \param ?
 	    ////////////////////////////////////////////////////////////
-		void updateGrid(LidarBeam p, int max_hits)
+		void updateGrid(LidarBeam p)
 		{
 				int x = floor(p.x/VOXEL_SIZE_METERS + GRID_SIZE/2);
 				int y = floor(p.y/VOXEL_SIZE_METERS + GRID_SIZE/2);
@@ -235,30 +241,10 @@ class OccupancyGrid
 					ogrid[y][x].hits += LIDAR_HITS_INCREMENT;
 					pointCloudTable[y*GRID_SIZE+x].update(p);
 					pointCloudTable_Uno[y*GRID_SIZE+x].push_back(p);
-					if (ogrid[y][x].hits > max_hits) { ogrid[y][x].hits = max_hits; }	
+					if (ogrid[y][x].hits > MAX_HITS_IN_CELL) { ogrid[y][x].hits = MAX_HITS_IN_CELL; }	
 				} 
 		}
 
-	    ////////////////////////////////////////////////////////////
-	    /// \brief ?
-	    ///
-	    /// \param ?
-	    /// \param ?
-	    ////////////////////////////////////////////////////////////
-		void validateOrientation(Eigen::Matrix3d mat)
-		{
-			goodLidarReading = true;
-			double ang[3];
-			ang[0] = atan2(-mat(1,2), mat(2,2) );    
-   			double sr = sin( ang[0] ), cr = cos( ang[0] );
-   			ang[1] = atan2( mat(0,2),  cr*mat(2,2) - sr*mat(1,2) );
-   			ang[2] = atan2( -mat(0,1), mat(0,0) ); 	
-   			ROS_INFO_STREAM("LIDAR | BOAT XYZ Rotation: " << ang[0]*180/M_PI << "," << ang[1]*180/M_PI << "," << ang[2]*180/M_PI );
-			if (fabs(ang[0]*180/M_PI) > MAX_ROLL_PITCH_ANGLE_DEG || fabs(ang[1]*180/M_PI) > MAX_ROLL_PITCH_ANGLE_DEG) {
-				//BOOST_ASSERT_MSG(fabs(false, "BOAT IN POOR ROLL_PITCH");
-				goodLidarReading = false;
-			}			
-		}
 
 	    ////////////////////////////////////////////////////////////
 	    /// \brief ?
@@ -355,6 +341,7 @@ class OccupancyGrid
 		std::unordered_map<unsigned,std::vector<LidarBeam>> pointCloudTable_Uno; ///< ???
 		Eigen::Vector2d b1,ab,ac;									///< ???
 		bool goodLidarReading = true;
+		size_t iterations = 0;
 };	
 
 #endif

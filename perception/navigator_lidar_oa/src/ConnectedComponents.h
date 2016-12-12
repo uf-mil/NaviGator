@@ -19,81 +19,47 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct objectStats
-{
-	void insertPersist(const std::deque<LidarBeam> &strikes) {
-		geometry_msgs::Point32 p32;
-		for (auto strike : strikes) {
-			p32.x = strike.x;
-			p32.y = strike.y;
-			p32.z = strike.z;
-			strikesPersist.push_back(p32);
-			intensityPersist.push_back(strike.i);
-			confidentPersist.push_back(strike.confident);
-		}
-	}
-	void insertFrame(const std::vector<LidarBeam> &strikes) {
-		geometry_msgs::Point32 p32;
-		for (auto strike : strikes) {
-			p32.x = strike.x;
-			p32.y = strike.y;
-			p32.z = strike.z;
-			strikesFrame.push_back(p32);
-			intensityFrame.push_back(strike.i);
-		}		
-	}
-	bool dimensions() {
-		if (strikesPersist.size() <= 7) { return false; }
-
-		std::multiset<double> x,y,z;
-		std::unordered_map<int,unsigned> map;
-		size_t cnt = 0;
-		for (auto p = strikesPersist.begin(); p != strikesPersist.end(); ++p, ++cnt) {
-			if (confidentPersist[cnt]) {
-				x.insert(p->x);
-				y.insert(p->y);
-				z.insert(p->z);
-				++map[floor(p->z/VOXEL_SIZE_Z_METERS)];
-			}
-		}
-		if (!x.size() || !y.size() || !z.size()) { return false; }
-
-		//REMOVE OUTLIERS		
-		auto removed = 0;
-		for (auto it = z.begin(); it != z.end(); ) {
-			if (map[floor(*it/VOXEL_SIZE_Z_METERS)] < VOXEL_SIZE_Z_MIN_HITS) {
-				it = z.erase(it); ++removed;
-			} else {
-				++it;
-			}
-		}
-		if (!z.size()) { return false; }
-
-		dx = *(--x.end()) - *x.begin(); cx = *x.begin() + dx/2;
-		dy = *(--y.end()) - *y.begin(); cy = *y.begin() + dy/2;
-		dz = *(--z.end()) - *z.begin(); cz = *z.begin() + dz/2;
-		ROS_INFO_STREAM("LIDAR | DIMENSIONS -> " << x.size() << "\t" << dx << "\t" << dy << "\t" << dz << " with " << removed);
-		return true;
-	}
-	float dx = 0,dy = 0,dz = 0,cx = 0,cy = 0,cz = 0;
-	std::vector<geometry_msgs::Point32> strikesPersist;
-	std::vector<geometry_msgs::Point32> strikesFrame;
-	std::vector<uint32_t> intensityPersist;
-	std::vector<uint32_t> intensityFrame;
-	std::vector<bool> confidentPersist;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct objectMessage
 {
+	void insertPersist(const std::deque<LidarBeam> &strikes) {
+		persist.insert(persist.end(),strikes.begin(),strikes.end());
+	}
+	void insertFrame(const std::vector<LidarBeam> &strikes) {
+		frame.insert(frame.end(),strikes.begin(),strikes.end());	
+	}
+	bool dimensions() {
+		std::multiset<double> xAll,yAll,zAll,xClose,yClose,zClose;
+		std::unordered_map<int,unsigned> map;
+		size_t cnt = 0;
+		for (auto p = persist.begin(); p != persist.end(); ++p, ++cnt) {
+			xAll.insert(p->x); yAll.insert(p->y); zAll.insert(p->z);
+			if (fabs(p->boatAnglesDot.roll) <= MAX_XY_ANGUlAR_VELOCITY_RAD_S && fabs(p->boatAnglesDot.pitch) <= MAX_XY_ANGUlAR_VELOCITY_RAD_S && fabs(p->boatAnglesDot.yaw) <= MAX_Z_ANGUlAR_VELOCITY_RAD_S && p->d <= LIDAR_CONFIDENCE_DISTANCE_METERS) {
+				xClose.insert(p->x); yClose.insert(p->y); zClose.insert(p->z);	
+			}
+		}
+
+		if (xAll.size() > 1 && yAll.size() > 1 && zAll.size() > 1) {
+			scaleAll.x = *(--xAll.end()) - *xAll.begin(); position.x = *xAll.begin() + scaleAll.x/2;
+			scaleAll.y = *(--yAll.end()) - *yAll.begin(); position.y = *yAll.begin() + scaleAll.y/2;
+			scaleAll.z = *(--zAll.end()) - *zAll.begin(); position.z = *zAll.begin() + scaleAll.z/2;
+			scale = scaleAll;
+		}
+
+		if (xClose.size() > 1 && yClose.size() > 1 && zClose.size() > 1) {
+			scaleClose.x = *(--xClose.end()) - *xClose.begin(); position.x = *xClose.begin() + scaleClose.x/2;
+			scaleClose.y = *(--yClose.end()) - *yClose.begin(); position.y = *yClose.begin() + scaleClose.y/2;
+			scaleClose.z = *(--zClose.end()) - *zClose.begin(); position.z = *zClose.begin() + scaleClose.z/2;
+			scale = scaleClose;
+		}
+		//ROS_INFO_STREAM("LIDAR | All   DIMENSIONS -> " << scaleAll.x << "\t" << scaleAll.y << "\t" << scaleAll.z);
+		//ROS_INFO_STREAM("LIDAR | Close DIMENSIONS -> " << scaleClose.x << "\t" << scaleClose.y << "\t" << scaleClose.z);
+		return true;
+	}
+
 	geometry_msgs::Point position;
-	geometry_msgs::Vector3 scale;
-	std::vector<geometry_msgs::Point32> strikesPersist;
-	std::vector<geometry_msgs::Point32> strikesFrame;
-	std::vector<uint32_t> intensityPersist;
-	std::vector<uint32_t> intensityFrame;
+	geometry_msgs::Vector3 scale,scaleAll,scaleClose;
+	std::vector<LidarBeam> persist;
+	std::vector<LidarBeam> frame;
 	std_msgs::ColorRGBA color;
 	int id = -1;
 	std::string name = "unknown";
@@ -104,9 +70,10 @@ struct objectMessage
 	bool locked = false;
 	bool real = true;
 	ros::Time age;
-    std::array<size_t,5> confidence{ {0,0,0,0,0} };
+    std::array<size_t,8> confidence{ {0,0,0,0,0,0,0,0} };
     uint8_t bestConfidence = 0;
 };
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +87,7 @@ struct RCLabel
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-std::vector< std::vector<int> > ConnectedComponents(OccupancyGrid &ogrid, std::vector<objectMessage> &objects, const double MIN_OBJECT_SEPERATION_DISTANCE)
+std::vector< std::vector<int> > ConnectedComponents(OccupancyGrid &ogrid, std::vector<objectMessage> &objects)
 {
 	//std::cout << "STARTING CONNECTED COMPONENTS" << std::endl;
 
@@ -189,7 +156,7 @@ std::vector< std::vector<int> > ConnectedComponents(OccupancyGrid &ogrid, std::v
 	}
 
 	//Pass 2
-	std::map<int,objectStats> mapObjects;
+	std::map<int,objectMessage> mapObjects;
 	for (int row = 0; row < ogrid.ROI_SIZE; ++row) {
 		for (int col = 0; col < ogrid.ROI_SIZE; ++col) {
 			if (cc[row][col]) { 
@@ -209,23 +176,11 @@ std::vector< std::vector<int> > ConnectedComponents(OccupancyGrid &ogrid, std::v
 	for (auto &ii : mapObjects)  {
 		if ( !ii.second.dimensions() ) { continue; }
 		bool isNewObject = true;
-		objectMessage obj;
-		obj.scale.x = ii.second.dx;
-		obj.scale.y = ii.second.dy;  
-		obj.scale.z = ii.second.dz;
-		obj.position.x = ii.second.cx;
-		obj.position.y = ii.second.cy;
-		obj.position.z =  ii.second.cz;
-		obj.strikesPersist = ii.second.strikesPersist;
-		obj.strikesFrame = ii.second.strikesFrame;
-		obj.intensityFrame = ii.second.intensityFrame;
-		obj.intensityPersist = ii.second.intensityPersist;
-		//obj.minHeightFromLidar = ii.second.minHeight-ogrid.lidarPos.z;
-		obj.maxHeightFromLidar = (ii.second.dz/2+ii.second.cz)-ogrid.lidarPos.z;
+		objectMessage obj = ii.second;
 		obj.age = ros::Time::now();
-		//obj.color = ii.second.color; //Eventually work with color
-
+		//obj.maxHeightFromLidar = (ii.second.scale.z/2+ii.second.position.z)-ogrid.lidarPos.z;
 		//Is this object really part of another one?
+		/*
 		for (auto &jj : objects) {
 			auto distance = sqrt(pow(obj.position.x-jj.position.x,2) + pow(obj.position.y-jj.position.y,2)  );
 			if (distance <= MIN_OBJECT_SEPERATION_DISTANCE) {
@@ -245,16 +200,15 @@ std::vector< std::vector<int> > ConnectedComponents(OccupancyGrid &ogrid, std::v
 				//BOOST_ASSERT_MSG(false, "yolo");
 				break;
 			}
-		}
+		}*/
 
-		if (obj.scale.z >= MIN_OBJECT_HEIGHT_METERS && isNewObject) {
+		if (obj.scaleAll.z >= MIN_OBJECT_HEIGHT_METERS && isNewObject) {
+			//ROS_INFO_STREAM("LIDAR | CC New object added!");
 			objects.push_back(obj);
+		} else {
+			//ROS_INFO_STREAM("LIDAR | CC Object rejected...");
 		}
-		//ROS_INFO_STREAM(newId << " -> " << ob.position.x << "," << ob.position.y << "," << ob.position.z << "|" << ob.scale.x << "," << ob.scale.y << "," << ob.scale.z);
-	
 	}
-
-	//std::cout << "FINISHED CONNECTED COMPONENTS" << std::endl;
 	return cc;
 }
 #endif
