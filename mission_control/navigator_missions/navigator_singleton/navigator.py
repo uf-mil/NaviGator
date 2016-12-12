@@ -344,6 +344,7 @@ class Searcher(object):
         self.object_found = False
         self.pattern_done = False
         self.response = None
+        print "dfdf"
 
     def catch_error(self, failure):
         if failure.check(defer.CancelledError):
@@ -357,7 +358,8 @@ class Searcher(object):
     def start_search(self, timeout=120, loop=True, spotings_req=2, **kwargs):
         fprint("Starting.", title="SEARCHER")
         looker = self._run_look(spotings_req).addErrback(self.catch_error)
-        finder = self._run_search_pattern(loop, **kwargs).addErrback(self.catch_error)
+        if self.search_pattern != None:
+            finder = self._run_search_pattern(loop, **kwargs).addErrback(self.catch_error)
 
         start_pose = self.nav.move.forward(0)
         start_time = self.nav.nh.get_time()
@@ -388,8 +390,6 @@ class Searcher(object):
         Look around using the search pattern.
         If `loop` is true, then keep iterating over the list until timeout is reached or we find it.
         '''
-        if self.search_pattern == None:
-            defer.returnValue(None)
 
         def pattern():
             for pose in self.search_pattern:

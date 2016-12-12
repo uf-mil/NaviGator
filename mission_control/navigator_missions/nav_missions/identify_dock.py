@@ -24,7 +24,7 @@ class IdentifyDockMission:
     LOOK_SHAPE_TIMEOUT = 10  # Time to look at bay with cam to see symbol
     DOCK_DISTANCE      = 3   # Distance in front of bay point to dock to
     DOCK_SLEEP_TIME    = 5   # Time to wait after docking before undocking aka show off time
-    WAYPOINT_NAME      = "DOCK"
+    WAYPOINT_NAME      = "dock"
     TIMEOUT_CIRCLE_VISION_ONLY    = 75
 
     def __init__(self, navigator):
@@ -155,7 +155,7 @@ class IdentifyDockMission:
     '''
     def _init_vision_only(self):
         self.ogrid_activation_client = self.navigator.nh.get_service_client('/identify_dock/active', SetBool)
-        self.cameraLidarTransformer = navigator.nh.get_service_client("/camera_to_lidar/stereo_right_cam", CameraToLidarTransform)
+        self.cameraLidarTransformer = self.navigator.nh.get_service_client("/camera_to_lidar/stereo_right_cam", CameraToLidarTransform)
         self.identified_shapes = {}
 
     def update_shape(self, shape_res, normal_res, tf):
@@ -171,7 +171,7 @@ class IdentifyDockMission:
 
     @txros.util.cancellableInlineCallbacks
     def search_shape_vision_only(self):
-        shapes = self.navigator.vision_proxies["get_shape_front"].get_response(Shape="ANY", Color="ANY")
+        shapes = yield self.navigator.vision_proxies["get_shape_front"].get_response(Shape="ANY", Color="ANY")
         if shapes.found:
             for shape in shapes.shapes.list:
                 normal_res = yield self.get_normal(shape)
@@ -189,9 +189,8 @@ class IdentifyDockMission:
 
     @txros.util.cancellableInlineCallbacks
     def circle_dock_vision_only(self):
-        print_good("Starting circle search")
+        print_good("Starting circle search (vision only)")
         pattern = self.navigator.move.d_circle_point(self.dock_pose, radius=self.CIRCLE_RADIUS)
-        yield next(pattern).go()
         searcher = self.navigator.search(search_pattern=pattern, looker=self.search_shape_vision_only)
         yield searcher.start_search(timeout=self.TIMEOUT_CIRCLE_VISION_ONLY, move_type="skid")
         print_good("Ended circle search")
@@ -258,11 +257,11 @@ class IdentifyDockMission:
         move_front = self.navigator.nh.move.set_position(shapepoint + shapenormal * self.LOOK_AT_DISTANCE).look_at(shapepoint)
         move_in    = self.navigator.nh.move.set_position(shapepoint + shapenormal *  self.DOCK_DISTANCE).look_at(shapepoint)
         yield move_front.go()
-        yield self.start_ogrid()
+        #  yield self.start_ogrid()
         yield move_in.go()
         yield self.navigator.nh.sleep(DOCK_SLEEP_TIME)
         yield move_front.go()
-        yield self.stop_ogrid()
+        #  yield self.stop_ogrid()
 
     @txros.util.cancellableInlineCallbacks
     def find_and_dock_vision_only(self):
@@ -276,10 +275,10 @@ class IdentifyDockMission:
 
 @txros.util.cancellableInlineCallbacks
 def setup_mission(navigator):
-    bay_1_color = "ANY"
+    bay_1_color = "GREEN"
     bay_1_shape = "CIRCLE"
-    bay_2_color = "GREEN"
-    bay_2_shape = "ANY"
+    bay_2_color = "BLUE"
+    bay_2_shape = "CROSS"
     yield navigator.mission_params["dock_shape_2"].set(bay_2_shape)
     yield navigator.mission_params["dock_shape_1"].set(bay_1_shape)
     yield navigator.mission_params["dock_color_1"].set(bay_1_color)
