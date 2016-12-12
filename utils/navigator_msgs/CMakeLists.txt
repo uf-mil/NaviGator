@@ -49,6 +49,7 @@ add_service_files(
   ColorRequest.srv
   FindPinger.srv
   SetFrequency.srv
+  GetDockBays.srv
 )
 
 add_action_files(

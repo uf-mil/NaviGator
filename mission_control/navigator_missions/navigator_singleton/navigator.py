@@ -332,7 +332,7 @@ class MissionParam(object):
 
 
 class Searcher(object):
-    def __init__(self, nav, search_pattern, looker=None, vision_proxy="test", **kwargs):
+    def __init__(self, nav, search_pattern=None, looker=None, vision_proxy="test", **kwargs):
         self.nav = nav
         self.looker = looker
         if looker == None:
@@ -388,6 +388,8 @@ class Searcher(object):
         Look around using the search pattern.
         If `loop` is true, then keep iterating over the list until timeout is reached or we find it.
         '''
+        if self.search_pattern == None:
+            defer.returnValue(None)
 
         def pattern():
             for pose in self.search_pattern:
