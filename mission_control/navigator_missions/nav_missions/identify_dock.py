@@ -18,7 +18,7 @@ print_good = lambda message: fprint(message, title="IDENTIFY DOCK",  msg_color='
 print_bad  = lambda message: fprint(message, title="IDENTIFY DOCK",  msg_color='yellow')
 
 class IdentifyDockMission:
-    CIRCLE_RADIUS      = 18  # Radius of circle in dock circle pattern
+    CIRCLE_RADIUS      = 16  # Radius of circle in dock circle pattern
     BAY_SEARCH_TIMEOUT = 80  # Seconds to circle dock looking for bays before giving up
     LOOK_AT_DISTANCE   = 10  # Distance in front of bay to move to to look at shape
     LOOK_SHAPE_TIMEOUT = 10  # Time to look at bay with cam to see symbol
@@ -94,8 +94,8 @@ class IdentifyDockMission:
 
     @txros.util.cancellableInlineCallbacks
     def dock_in_bay(self, index):
-        move_front = self.navigator.nh.move.set_position(self.bay_poses[i] + self.bay_normal * self.LOOK_AT_DISTANCE).look_at(self.bay_poses[i])
-        move_in    = self.navigator.nh.move.set_position(self.bay_poses[i] + self.bay_normal *  self.DOCK_DISTANCE).look_at(self.bay_poses[i])
+        move_front = self.navigator.move.set_position(self.bay_poses[i] + self.bay_normal * self.LOOK_AT_DISTANCE).look_at(self.bay_poses[i])
+        move_in    = self.navigator.move.set_position(self.bay_poses[i] + self.bay_normal *  self.DOCK_DISTANCE).look_at(self.bay_poses[i])
         yield move_front.go()
         yield move_in.go()
         yield self.navigator.nh.sleep(DOCK_SLEEP_TIME)
@@ -131,7 +131,7 @@ class IdentifyDockMission:
         '''
         for i, pose in enumerate(self.bay_poses):
             self.check_index = i
-            move = self.navigator.nh.move.set_position(pose + self.bay_normal * self.LOOK_AT_DISTANCE).look_at(pose)
+            move = self.navigator.move.set_position(pose + self.bay_normal * self.LOOK_AT_DISTANCE).look_at(pose)
             yield move.go()
             searcher = self.navigator.search(looker=self.search_shape)
             yield searcher.start_search(timeout=self.LOOK_SHAPE_TIMEOUT)
@@ -162,6 +162,7 @@ class IdentifyDockMission:
        self.identified_shapes[(shape_res.Shape, shape_res.Color)] = self.get_shape_pos(normal_res, tf)
 
     def done_circling(self):
+        print_good("CURRENT IDENTIFIED BAYS: {}".format(self.identifed_shapes))
         for shape_color, point_normal in self.identified_shapes.iteritems():
             if self.correct_shape(self.bay_1, shape_color):
               for shape_color2, point_normal in self.identified_shapes.iteritems():
@@ -178,7 +179,12 @@ class IdentifyDockMission:
                 if normal_res.success:
                     enu_cam_tf = yield self.navigator.tf_listener.get_transform('/enu', '/'+shape.header.frame_id, shape.header.stamp)
                     self.update_shape(shape, normal_res, enu_cam_tf)
-                    defer.returnValue(self.done_circling())
+                    if (self.done_circling()):
+                        defer.returnValue(True)
+                else:
+                      print_bad("NORMAL ERROR: {}".format(normal_res.error))
+        else:
+            print_bad("SHAPES ERROR: ".format(shapes.error))
         defer.returnValue(False)
 
     def _bounding_rect(self,points):
@@ -192,7 +198,7 @@ class IdentifyDockMission:
         print_good("Starting circle search (vision only)")
         pattern = self.navigator.move.d_circle_point(self.dock_pose, radius=self.CIRCLE_RADIUS)
         searcher = self.navigator.search(search_pattern=pattern, looker=self.search_shape_vision_only)
-        yield searcher.start_search(timeout=self.TIMEOUT_CIRCLE_VISION_ONLY, move_type="skid")
+        yield searcher.start_search(timeout=self.TIMEOUT_CIRCLE_VISION_ONLY, spotings_req=1, move_type="skid")
         print_good("Ended circle search")
 
     def normal_is_sane(self, vector3):
@@ -219,7 +225,7 @@ class IdentifyDockMission:
         return (enupoint, enunormal)
 
     @txros.util.cancellableInlineCallbacks
-    def dock_vision_only(self, (shapepoint, shapenormal)):
+    def dock_vision_only(self):
         bay_1_shape = None
         bay_2_shape = None
         incorrect_shapes = []
@@ -254,12 +260,12 @@ class IdentifyDockMission:
 
     @txros.util.cancellableInlineCallbacks
     def dock_in_bay_vision_only(self, (shapepoint, shapenormal)):
-        move_front = self.navigator.nh.move.set_position(shapepoint + shapenormal * self.LOOK_AT_DISTANCE).look_at(shapepoint)
-        move_in    = self.navigator.nh.move.set_position(shapepoint + shapenormal *  self.DOCK_DISTANCE).look_at(shapepoint)
+        move_front = self.navigator.move.set_position(shapepoint + shapenormal * self.LOOK_AT_DISTANCE).look_at(shapepoint)
+        move_in    = self.navigator.move.set_position(shapepoint + shapenormal *  self.DOCK_DISTANCE).look_at(shapepoint)
         yield move_front.go()
         #  yield self.start_ogrid()
         yield move_in.go()
-        yield self.navigator.nh.sleep(DOCK_SLEEP_TIME)
+        yield self.navigator.nh.sleep(self.DOCK_SLEEP_TIME)
         yield move_front.go()
         #  yield self.stop_ogrid()
 
@@ -275,10 +281,10 @@ class IdentifyDockMission:
 
 @txros.util.cancellableInlineCallbacks
 def setup_mission(navigator):
-    bay_1_color = "GREEN"
+    bay_1_color = "RED"
     bay_1_shape = "CIRCLE"
-    bay_2_color = "BLUE"
-    bay_2_shape = "CROSS"
+    bay_2_color = "RED"
+    bay_2_shape = "CIRCLE"
     yield navigator.mission_params["dock_shape_2"].set(bay_2_shape)
     yield navigator.mission_params["dock_shape_1"].set(bay_1_shape)
     yield navigator.mission_params["dock_color_1"].set(bay_1_color)
