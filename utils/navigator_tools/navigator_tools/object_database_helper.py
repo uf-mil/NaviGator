@@ -248,3 +248,20 @@ class DBHelper(object):
     def set_fake_position(self, pos):
         """Set the position of a fake perception object."""
         raise NotImplementedError()
+
+    @util.cancellableInlineCallbacks
+    def get_objects_in_radius(self, pos, radius, objects="all"):
+        req = ObjectDBQueryRequest()
+        req.name = 'all'
+        resp = yield self._database(req)
+        ans = []
+
+        if not resp.found:
+            defer.returnValue(ans)
+
+        for o in resp.objects:
+            if objects == "all" or o.name in objects:
+                dist = np.linalg.norm(pos - nt.rosmsg_to_numpy(o.position))
+                if dist < radius:
+                    ans.append(o)
+        defer.returnValue(ans)
