@@ -267,6 +267,7 @@ class ScanTheCodePerception(object):
             yield self.nh.sleep(.3)
             count += 1
             if count == 20:
+                print "no images"
                 defer.returnValue(False)
         # %%%%%%%%%%%%%%%%%%%%%%%%DEBUG
 

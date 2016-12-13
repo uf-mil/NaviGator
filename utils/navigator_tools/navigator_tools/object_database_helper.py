@@ -226,8 +226,6 @@ class DBHelper(object):
                         min_obj = o
                 defer.returnValue(min_obj)
 
-            print "good"
-
             if len(actual_objects) == 1:
                 defer.returnValue(actual_objects[0])
 
