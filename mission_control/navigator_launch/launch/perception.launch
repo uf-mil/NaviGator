@@ -5,4 +5,5 @@
 
   <node name="scan_the_code" pkg="navigator_vision" type="model_detector.py" respawn="True"/>
   <node name="pinger_finder" pkg="navigator_vision" type="pinger_finder.py" />
+<node name="database_color" pkg="navigator_vision" type="database_color.py" />
 </launch>
