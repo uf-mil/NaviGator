@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="navigator_identify_and_dock" type="navigator_identify_and_dock" name="navigator_identify_and_dock">
+  </node>
+</launch>
+
