@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(navigator_identify_and_dock)
-set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++0x -g ${CMAKE_CXX_FLAGS}")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -145,7 +145,6 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(navigator_identify_and_dock src/navigator_identify_and_dock.cpp src/fake_ogrid.cpp src/dock_service.cpp)
-
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(navigator_identify_and_dock_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

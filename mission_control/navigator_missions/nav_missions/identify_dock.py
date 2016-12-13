@@ -41,7 +41,7 @@ class IdentifyDockMission:
         return self.ogrid_activation_client(SetBoolRequest(data=True))
 
     def stop_ogrid(self):
-        return self.ogrid_listen_client(SetBoolRequest(data=False))
+        return self.ogrid_activation_client(SetBoolRequest(data=False))
 
     @txros.util.cancellableInlineCallbacks
     def get_target_bays(self):
@@ -159,10 +159,11 @@ class IdentifyDockMission:
         self.identified_shapes = {}
 
     def update_shape(self, shape_res, normal_res, tf):
+       print_good("Found (Shape={}, Color={} in a bay".format(shape_res.Shape, shape_res.Color))
        self.identified_shapes[(shape_res.Shape, shape_res.Color)] = self.get_shape_pos(normal_res, tf)
 
     def done_circling(self):
-        print_good("CURRENT IDENTIFIED BAYS: {}".format(self.identifed_shapes))
+        print_good("CURRENT IDENTIFIED BAYS: {}".format(self.identified_shapes))
         for shape_color, point_normal in self.identified_shapes.iteritems():
             if self.correct_shape(self.bay_1, shape_color):
               for shape_color2, point_normal in self.identified_shapes.iteritems():
@@ -184,7 +185,7 @@ class IdentifyDockMission:
                 else:
                       print_bad("NORMAL ERROR: {}".format(normal_res.error))
         else:
-            print_bad("SHAPES ERROR: ".format(shapes.error))
+            print_bad("SHAPES ERROR: {}".format(shapes.error))
         defer.returnValue(False)
 
     def _bounding_rect(self,points):
@@ -202,7 +203,7 @@ class IdentifyDockMission:
         print_good("Ended circle search")
 
     def normal_is_sane(self, vector3):
-         return abs(navigator_tools.rosmsg_to_numpy(vector3)[1]) < 0.2
+         return abs(navigator_tools.rosmsg_to_numpy(vector3)[1]) < 0.4
 
     @txros.util.cancellableInlineCallbacks
     def get_normal(self, shape):
@@ -216,6 +217,7 @@ class IdentifyDockMission:
         normal_res = yield self.cameraLidarTransformer(req)
         if not self.normal_is_sane(normal_res.normal):
             normal_res.success = False
+            print_bad("UNREASONABLE NORMAL={}".format(normal_res.normal))
             normal_res.error = "UNREASONABLE NORMAL"
         defer.returnValue(normal_res)
 
@@ -263,11 +265,11 @@ class IdentifyDockMission:
         move_front = self.navigator.move.set_position(shapepoint + shapenormal * self.LOOK_AT_DISTANCE).look_at(shapepoint)
         move_in    = self.navigator.move.set_position(shapepoint + shapenormal *  self.DOCK_DISTANCE).look_at(shapepoint)
         yield move_front.go()
-        #  yield self.start_ogrid()
+        yield self.start_ogrid()
         yield move_in.go()
         yield self.navigator.nh.sleep(self.DOCK_SLEEP_TIME)
         yield move_front.go()
-        #  yield self.stop_ogrid()
+        yield self.stop_ogrid()
 
     @txros.util.cancellableInlineCallbacks
     def find_and_dock_vision_only(self):
@@ -281,7 +283,7 @@ class IdentifyDockMission:
 
 @txros.util.cancellableInlineCallbacks
 def setup_mission(navigator):
-    bay_1_color = "RED"
+    bay_1_color = "GREEN"
     bay_1_shape = "CIRCLE"
     bay_2_color = "RED"
     bay_2_shape = "CIRCLE"
