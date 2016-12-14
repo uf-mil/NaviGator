@@ -79,11 +79,11 @@ void FakeOgrid::drawOgrid() {
                 ROS_ERROR("%s", ex.what());
             }
 
-            sensor_msgs::PointCloud2 *cloud_transformed;
-            tf2::doTransform(*scloud, *cloud_transformed, t_enu_vel);
+            sensor_msgs::PointCloud2 cloud_transformed;
+            tf2::doTransform(*scloud, cloud_transformed, t_enu_vel);
 
             pcl::PointCloud<pcl::PointXYZ> cloud;
-            pcl::fromROSMsg(*cloud_transformed, cloud);
+            pcl::fromROSMsg(cloud_transformed, cloud);
 
             cv::Mat dockOgridDraw = cv::Mat::zeros((int)(searchArea.height / VOXEL_SIZE_METERS), (int)(searchArea.width / VOXEL_SIZE_METERS), CV_8U);
 

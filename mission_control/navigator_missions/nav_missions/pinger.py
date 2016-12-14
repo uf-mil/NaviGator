@@ -15,11 +15,11 @@ ___author___ = "Kevin Allen"
 
 class PingerMission:
     OBSERVE_DISTANCE_METERS = 12
-    GATE_CROSS_METERS = 10
+    GATE_CROSS_METERS = 5
     FREQ = 35000
     LISTEN_TIME = 15
     MAX_CIRCLE_BUOY_ERROR = 30
-    CIRCLE_RADIUS = 5
+    CIRCLE_RADIUS = 8
 
     def __init__(self, navigator):
         self.navigator = navigator
@@ -220,9 +220,9 @@ class PingerMission:
         if self.circle_totem != None:
             pattern = self.navigator.move.d_circle_point(self.circle_totem, radius=self.CIRCLE_RADIUS, direction='cw')
             for pose in pattern:
-                yield pose.go(move_type="skid")
+                yield pose.go(move_type="drive")
             for p in reversed(self.gate_thru_points):
-                yield self.navigator.move.set_position(p).go(initial_plan_time=5, move_type="skid")
+                yield self.navigator.move.set_position(p).go(initial_plan_time=5, move_type="drive")
 
     def get_gate_perp(self):
         """Calculate a perpendicular to the line formed by the three gates"""

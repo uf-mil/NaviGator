@@ -35,7 +35,7 @@ private:
     ros::Publisher pubMarkers;
     nav_msgs::OccupancyGrid rosGrid;
     const double VOXEL_SIZE_METERS = 0.30;
-    const int MIN_HIT = 1;
+    const int MIN_HIT = 3;
     const float BOX_SIZE = 0.5;
     ros::Publisher pubGrid;
 

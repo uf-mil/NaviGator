@@ -24,7 +24,7 @@ class DetectDeliverMission:
     search_timeout_seconds = 300
     SHAPE_CENTER_TO_BIG_TARGET = 0.42
     SHAPE_CENTER_TO_SMALL_TARGET = -0.42
-    NUM_BALLS = 4
+    NUM_BALLS = 1
 
     def __init__(self, navigator):
         self.navigator = navigator
@@ -188,7 +188,7 @@ class DetectDeliverMission:
 @txros.util.cancellableInlineCallbacks
 def setup_mission(navigator):
     color = "ANY"
-    shape = "ANY"
+    shape = "CROSS"
     #color = yield navigator.mission_params["scan_the_code_color3"].get()
     fprint("Setting search shape={} color={}".format(shape, color), title="DETECT DELIVER",  msg_color='green')
     yield navigator.mission_params["detect_deliver_shape"].set(shape)

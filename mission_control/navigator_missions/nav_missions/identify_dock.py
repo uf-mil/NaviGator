@@ -38,10 +38,12 @@ class IdentifyDockMission:
         self.docked = (False, False)
 
     def start_ogrid(self):
-        return self.ogrid_activation_client(SetBoolRequest(data=True))
+        pass
+        #return self.ogrid_activation_client(SetBoolRequest(data=True))
 
     def stop_ogrid(self):
-        return self.ogrid_activation_client(SetBoolRequest(data=False))
+        pass
+        #return self.ogrid_activation_client(SetBoolRequest(data=False))
 
     @txros.util.cancellableInlineCallbacks
     def get_target_bays(self):
@@ -77,7 +79,7 @@ class IdentifyDockMission:
         Circle the dock until the bays are identified by the perception service
         '''
         print_good("Starting circle search")
-        pattern = self.navigator.move.d_circle_point(self.dock_pose, radius=self.CIRCLE_RADIUS)
+        pattern = self.navigator.move.d_circle_point(self.dock_pose, radius=self.CIRCLE_RADIUS, direction="cw")
         yield next(pattern).go()
         searcher = self.navigator.search(search_pattern=pattern, looker=self.search_bays)
         yield searcher.start_search(timeout=self.BAY_SEARCH_TIMEOUT, move_type="skid", loop=True)
@@ -285,8 +287,8 @@ class IdentifyDockMission:
 def setup_mission(navigator):
     bay_1_color = "GREEN"
     bay_1_shape = "CIRCLE"
-    bay_2_color = "RED"
-    bay_2_shape = "CIRCLE"
+    bay_2_color = "BLUE"
+    bay_2_shape = "TRIANGLE"
     yield navigator.mission_params["dock_shape_2"].set(bay_2_shape)
     yield navigator.mission_params["dock_shape_1"].set(bay_1_shape)
     yield navigator.mission_params["dock_color_1"].set(bay_1_color)
