@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <exception>
 #include <unordered_map>
 #include <cstring>
 #include <deque>
@@ -161,12 +162,20 @@ class OccupancyGrid
 					double lidarAngle = fabs(acos(lidarHeading.dot(dir))*180./M_PI);
 					double distance = sqrt(pow(boatRow - row, 2) + pow(boatCol - col, 2)) * VOXEL_SIZE_METERS;
 					//std::cout << row << " , " << col << " , " << lidarAngle << " , " << distance << std::endl;
-					if (lidarAngle <= LIDAR_VIEW_ANGLE_DEG && ogrid[row][col].hits > 0 && distance >= LIDAR_MIN_VIEW_DISTANCE_METERS) { 
+					try{
+						auto val =  ogrid.at(row).at(col).hits;
+						if (lidarAngle <= LIDAR_VIEW_ANGLE_DEG && val > 0 && distance >= LIDAR_MIN_VIEW_DISTANCE_METERS) { 
 						ogrid[row][col].hits -= 1;
 						if (ogrid[row][col].hits < 0) {
 							ogrid[row][col] = cell();
-						}	
-					} 
+							}	
+						}	 
+					}
+					catch(std::exception &e){
+						std::cout << "OUT OF BOUNDS"<< row << col << std::endl;
+						std::cout << e.what() << std::endl;
+					}
+					
 				}
 			}
 			
