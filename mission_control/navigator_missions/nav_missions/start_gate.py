@@ -134,7 +134,6 @@ def main(navigator):
     yield navigator._point_cloud_pub.publish(pc)
     print "Waiting 3 seconds to move..."
     yield navigator.nh.sleep(3)
-    yield setup.go(move_type='skid')
  
     pose = yield navigator.tx_pose
     ogrid.generate_grid(pose)

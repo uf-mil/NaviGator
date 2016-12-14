@@ -29,9 +29,9 @@ def main(navigator, **kwargs):
     all_found = False
 
     # Get colors of intrest and directions
-    c1 = navigator.mission_params['totem_color_1'].get()
-    c2 = navigator.mission_params['totem_color_2'].get()
-    c2 = navigator.mission_params['totem_color_3'].get()
+    c1 = "BLUE" #navigator.mission_params['totem_color_1'].get()
+    c2 = "GREEN" #navigator.mission_params['totem_color_2'].get()
+    c2 = "BLUE" #navigator.mission_params['totem_color_3'].get()
     
     colors = [c1, c2]
 
