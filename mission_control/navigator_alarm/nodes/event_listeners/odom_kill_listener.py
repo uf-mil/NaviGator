@@ -23,6 +23,13 @@ class OdomKillListener(object):
         self.odom_listener = rospy.Subscriber('/odom', Odometry, self.got_odom_msg, queue_size=1)
         self.alarm_broadcaster, self.alarm = single_alarm('odom_loss', severity=3,
                                                           problem_description="Killing wamv due to unreliable state estimation")
+        # Raise alarm until we get odom
+        self.alarm.raise_alarm()
+        rospy.loginfo("Waiting for odom...")
+        rospy.wait_for_message("/odom", Odometry)
+        rospy.loginfo("Odom found!")
+        self.alarm.clear_alarm()
+
         rospy.Timer(rospy.Duration(0.1), self.check)
 
     def check(self, *args):
@@ -59,7 +66,7 @@ class OdomKillListener(object):
             return False
 
     def need_kill(self):  
-        odom_loss =  rospy.Time.now() - self.last_time > self.timeout
+        odom_loss = rospy.Time.now() - self.last_time > self.timeout
         if odom_loss:
             rospy.logerr('LOST ODOM FOR {} SECONDS'.format((rospy.Time.now() - self.last_time).to_sec()))
         return odom_loss or self.odom_discontinuity
