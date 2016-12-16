@@ -16,13 +16,14 @@ BF_WIDTH = 60.0  # m
 BF_EST_COFIDENCE = 10.0  # How percisly can they place the waypoints? (m)
 TOTEM_SAFE_DIST = 6  # How close do we go to the totem
 ROT_SAFE_DIST = 6  # How close to rotate around it
+CIRCLE_OFFSET = 1.5  # To fix the circleness of the circle
 SPEED_FACTOR = .5
 
 @txros.util.cancellableInlineCallbacks
 def main(navigator, **kwargs):
     # rgb color map to param vlues
     color_map = {'BLUE': [0, 0, 1], 'RED': [1, 0, 0], 'YELLOW': [1, 1, 0], 'GREEN': [0, 1, 0]}
-    directions = {'RED': 'CLOCKWISE', 'GREEN': 'COUNTER-CLOCKWISE', 'BLUE': 'CLOCKWISE', 'YELLOW': 'COUNTER-CLOCKWISE'}
+    directions = {'RED': 'cw', 'GREEN': 'ccw', 'BLUE': 'cw', 'YELLOW': 'ccw'}
     
     ogrid = OccupancyGridFactory(navigator)
 
@@ -56,7 +57,7 @@ def main(navigator, **kwargs):
     # TODO: What if we don't see the colors?
     for color in colors:
         color = yield color
-        direction = 'cw' if directions[color] == "CLOCKWISE" else 'ccw'
+        direction = directions[color]
         
         fprint("Going to totem colored {} in direction {}".format(color, direction), title="CIRCLE_TOTEM")
         target = yield get_colored_buoy(navigator, color_map[color])
@@ -74,9 +75,8 @@ def main(navigator, **kwargs):
             if res.failure_reason is '':
                 break
 
-        offset = 1.5
         mult = 1 if direction == 'cw' else -1
-        left_offset = mult * offset
+        left_offset = mult * CIRCLE_OFFSET
         
         tangent_circler = navigator.move.d_circle_point(point=target_np, radius=ROT_SAFE_DIST, theta_offset=mult * 1.57, direction=direction)
 

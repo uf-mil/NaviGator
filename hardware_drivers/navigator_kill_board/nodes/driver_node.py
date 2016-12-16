@@ -59,7 +59,7 @@ class KillInterface(object):
                            '\x1E': self.disconnect.clear_alarm, '\x1F': self.disconnect.raise_alarm,}
         
         while not rospy.is_shutdown():
-            rospy.sleep(.5)
+            rospy.sleep(0.25)
             while self.ser.inWaiting() > 0:
                 self.check_buffer()
             self.get_status()
@@ -113,7 +113,7 @@ class KillInterface(object):
         fprint("Reading response...", title="REQUEST")
         resp = self.ser.read(1)
         
-        rospy.sleep(.05)
+        rospy.sleep(0.05)
         if recv_str is None:
             fprint("Response received: {}".format(self.to_hex(resp)), msg_color='blue')
             return resp
