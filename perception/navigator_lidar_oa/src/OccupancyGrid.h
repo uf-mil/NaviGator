@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <exception>
 #include <unordered_map>
 #include <cstring>
 #include <deque>
@@ -276,10 +277,15 @@ class OccupancyGrid
 			for (int row = boatRow - ROI_SIZE/2; row < boatRow + ROI_SIZE/2; ++row,++binaryRow) {
 				int binaryCol = 0;
 				for (int col = boatCol - ROI_SIZE/2; col < boatCol + ROI_SIZE/2; ++col,++binaryCol) {
-					if ( ogrid[row][col].hits >= minHits && pointCloudTable[row*GRID_SIZE+col].q.size() >= MIN_LIDAR_POINTS_FOR_OCCUPANCY && pointCloudTable[row*GRID_SIZE+col].height() >= MIN_OBJECT_HEIGHT_METERS) {  
+					try{
+						if ( ogrid.at(row).at(col).hits >= minHits && pointCloudTable.at(row*GRID_SIZE+col).q.size() >= MIN_LIDAR_POINTS_FOR_OCCUPANCY && pointCloudTable.at(row*GRID_SIZE+col).height() >= MIN_OBJECT_HEIGHT_METERS) {  
 						ogridBinary[binaryRow][binaryCol] = true; 
 						ogridMap[binaryRow*ROI_SIZE+binaryCol] = 100;
 					}
+				}catch(std::exception &e){
+					std::cout<<e.what()<<__PRETTY_FUNCTION__<<std::endl;
+					
+				}
 				}
 			}
 		}
