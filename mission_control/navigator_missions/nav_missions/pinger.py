@@ -69,6 +69,7 @@ class PingerMission:
                                   np.linalg.norm(pose - (self.gate_poses[0] - self.OBSERVE_DISTANCE_METERS * self.g_perp))])
         if np.argmin(distance_test) == 1:
             self.negate = True
+        yield self.navigator.mission_params["pinger_negate"].set(self.negate)
         if self.negate:
             self.observation_points = (np.append((self.gate_poses[0] - self.OBSERVE_DISTANCE_METERS * self.g_perp), 0),
                                        np.append((self.gate_poses[2] - self.OBSERVE_DISTANCE_METERS * self.g_perp), 0))
