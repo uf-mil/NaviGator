@@ -16,12 +16,14 @@ BF_WIDTH = 60.0  # m
 BF_EST_COFIDENCE = 10.0  # How percisly can they place the waypoints? (m)
 TOTEM_SAFE_DIST = 6  # How close do we go to the totem
 ROT_SAFE_DIST = 6  # How close to rotate around it
+CIRCLE_OFFSET = 1.5  # To fix the circleness of the circle
+SPEED_FACTOR = .5
 
 @txros.util.cancellableInlineCallbacks
 def main(navigator, **kwargs):
     # rgb color map to param vlues
     color_map = {'BLUE': [0, 0, 1], 'RED': [1, 0, 0], 'YELLOW': [1, 1, 0], 'GREEN': [0, 1, 0]}
-    directions = {'RED': 'CLOCKWISE', 'GREEN': 'COUNTER-CLOCKWISE', 'BLUE': 'CLOCKWISE', 'YELLOW': 'COUNTER-CLOCKWISE'}
+    directions = {'RED': 'cw', 'GREEN': 'ccw', 'BLUE': 'cw', 'YELLOW': 'ccw'}
     
     ogrid = OccupancyGridFactory(navigator)
 
@@ -67,7 +69,24 @@ def main(navigator, **kwargs):
             defer.returnValue(None)
 
         target_np = navigator_tools.point_to_numpy(target.position)
-        set_up = navigator.move.look_at(target_np).set_position(target_np).backward(TOTEM_SAFE_DIST)
+        circler = navigator.move.d_circle_point(point=target_np, radius=TOTEM_SAFE_DIST, direction=direction)
+        
+        # Give the totem a look at
+        for p in circler:
+            res = yield p.go(speed_factor=SPEED_FACTOR)
+            if res.failure_reason is '':
+                break
+
+        mult = 1 if direction == 'cw' else -1
+        left_offset = mult * CIRCLE_OFFSET
+        
+        tangent_circler = navigator.move.d_circle_point(point=target_np, radius=ROT_SAFE_DIST, theta_offset=mult * 1.57, direction=direction)
+
+        # Point tangent
+        for p in tangent_circler:
+            res = yield p.go(speed_factor=SPEED_FACTOR)
+            if res.failure_reason is '':
+                break
         
         # Approach totem, making sure we actually get there.
         res = yield set_up.go(initial_plan_time=2)
