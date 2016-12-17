@@ -56,7 +56,7 @@ class KillInterface(object):
         al = AlarmListener("kill", self.alarm_kill_cb)
         
         while not rospy.is_shutdown():
-            rospy.sleep(.1)
+            rospy.sleep(0.5)
             self.get_status()
             self.control_check()
 
@@ -212,12 +212,12 @@ class KillInterface(object):
             self.set_unkill()
 
     def ping(self):
-        rospy.loginfo("Pinging")
-        
-        if self.request('\x20', '\x30'):
-            rospy.loginfo("Ponged")
-        else:
-            rospy.logerr("Incorrect ping response")
+        #rospy.loginfo("Pinging")
+        self.request('\x20') 
+        # if self.request('\x20', '\x30'):
+        #     #rospy.loginfo("Ponged")
+        # else:
+        #     rospy.logerr("Incorrect ping response")
 
 
 if __name__ == '__main__':
