@@ -16,58 +16,43 @@ NORTH = trns.quaternion_matrix(pose_editor.NORTH)
 SOUTH = trns.quaternion_matrix(pose_editor.SOUTH)
 
 @txros.util.cancellableInlineCallbacks
-def main(navigator):
-    result = navigator.fetch_result()
-
+def main(navigator, **kwargs):
     #middle_point = np.array([-10, -70, 0]) 
-    est_coral_survey = yield navigator.database_query("Coral_Survey")
+    est_coral_survey = yield navigator.database_query("CoralSurvey")
     
-    yield navigator.move.set_position(est_coral_survey.objects[0]).go()
-
+    #yield navigator.move.set_position(est_coral_survey.objects[0]).go()
+    
     totem = yield navigator.database_query("totem")
     
     # Get the closest totem object to the boat
-    totem_np = map(lambda obj: navigator_tools.point_to_numpy(obj), totem.objects)
-    dist = map(lambda totem_np: np.linalg.norm(totem_np - navigator_tools.point_to_numpy(est_coral_survey.objects[0])), totems_np)
-
-    middle_point = navigator_tools.point_to_numpy(totem.objects[0].position)
+    totems_np = map(lambda obj: navigator_tools.point_to_numpy(obj.position), totem.objects)
+    dist = map(lambda totem_np: np.linalg.norm(totem_np - navigator_tools.point_to_numpy(est_coral_survey.objects[0].position)), totems_np)
+    middle_point = totems_np[np.argmin(dist)]
+    print "Totem sorted:", totems_np
+    print "Totem selected: ", totems_np[0]
     quads_to_search = [1, 2, 3, 4]
-    if (yield navigator.nh.has_param("/mission/coral_survey/quadrants")):
-        quads_to_search = yield navigator.nh.get_param("/mission/coral_survey/quadrants")
+    quad = yield navigator.mission_params["acoustic_pinger_active_index"].get() 
+    #second = yield navigator.mission_params["coral_survey_search_first"].get()
 
     waypoint_from_center = np.array([10 * np.sqrt(2)])
+
+    # Publish ogrid with boundaries to stay inside
+    ogrid = OgridFactory(middle_point, draw_borders=True)
+    #msg = ogrid.get_message()
+    #latched = navigator.latching_publisher("/mission_ogrid", OccupancyGrid, msg)
 
     # Construct waypoint list along NSEW directions then rotate 45 degrees to get a good spot to go to.
     directions = [EAST, NORTH, WEST, SOUTH]
     waypoints = []
-    for quad in quads_to_search:
-        mid = navigator.move.set_position(middle_point).set_orientation(directions[quad - 1])
-        waypoints.append(mid.yaw_left(45, "deg").forward(waypoint_from_center).set_orientation(NORTH))
-
-    # Get into the coral survey area
-    yield waypoints[0].go()
-
-    # Publish ogrid with boundaries to stay inside
-    ogrid = OgridFactory(middle_point, draw_borders=True)
-    msg = ogrid.get_message()
-    latched = navigator.latching_publisher("/mission_ogrid", OccupancyGrid, msg)
-
-    searcher = navigator.search("coral_survey", waypoints)
-    yield searcher.start_search(move_type='skid', spotings_req=1)
-
-    fprint("Centering over the thing!", title="CORAL_SURVEY")
-
-    # TODO: Center over the thing.
-
-    boat_position = (yield navigator.tx_pose)[0]
-
-    # TODO: make this easier
-    quad = np.argmin(np.linalg.norm(boat_position - [[w.pose[0][0][0], w.pose[0][1][0],w.pose[0][2][0]] for w in waypoints], axis=1))
-    quad = quads_to_search[quad]
-    fprint("Estimated quadrant: {}".format(quad), title="CORAL_SURVEY", msg_color='green')
-
-    yield navigator.nh.sleep(5)
-    defer.returnValue(result)
+    #for quad in quads_to_search:
+    mid = navigator.move.set_position(middle_point).set_orientation(directions[quad - 1])
+    search_center = mid.yaw_left(45, "deg").forward(waypoint_from_center).set_orientation(NORTH)
+    yield search_center.left(5).go()
+    yield navigator.move.circle_point(search_center.position, direction='cw').go()
+    
+    yield navigator.mission_params["coral_survey_shape1"].set("CROSS")
+    #latched.cancel()
+    defer.returnValue(None)
 
 
 # This really shouldn't be here - it should be somewhere behind the scenes

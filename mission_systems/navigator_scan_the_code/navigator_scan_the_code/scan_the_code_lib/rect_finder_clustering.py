@@ -62,8 +62,9 @@ class RectangleFinderClustering(object):
 
         Returns boolean success value and the four rectangle points in the image
         """
+        print roi.shape
         gaussian = cv2.GaussianBlur(roi, (9, 9), 10.0)
-        roi = cv2.addWeighted(roi, 1.5, gaussian, -0.5, 0, roi)
+        # roi = cv2.addWeighted(roi, 1.5, gaussian, -0.5, 0, roi)
 
         nh, nw, r = roi.shape
 

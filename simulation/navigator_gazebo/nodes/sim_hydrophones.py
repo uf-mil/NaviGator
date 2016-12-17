@@ -2,6 +2,7 @@
 import rospy
 from std_srvs.srv import SetBool, SetBoolResponse
 from navigator_msgs.srv import FindPinger, FindPingerResponse, SetFrequency, SetFrequencyResponse
+from navigator_msgs.srv import GetDockBays, GetDockBaysResponse
 
 def find_pinger_cb(req):
   #hardcoded for one of the gates
@@ -10,6 +11,9 @@ def find_pinger_cb(req):
   res.pinger_position.y =-15.6615581512
   res.pinger_position.z = 0
   return res
+
+def get_bays(req):
+  res = GetDockBaysResponse()
 
 def default_cb(req):
   return {}

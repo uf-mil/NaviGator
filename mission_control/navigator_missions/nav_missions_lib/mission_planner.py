@@ -56,9 +56,15 @@ class MissionPlanner:
 
     @util.cancellableInlineCallbacks
     def _get_closest_mission(self):
+        # defer.returnValue(self.tree[0])
         os = []
         for m in self.tree:
-            os.append(m.marker)
+            if m.marker is not None:
+                os.append(m.marker)
+
+        if len(os) == 0:
+            defer.returnValue(self.tree[0])
+
         closest = yield self.helper.get_closest_object(os)
         for m in self.tree:
             if m.marker.name == closest.name:

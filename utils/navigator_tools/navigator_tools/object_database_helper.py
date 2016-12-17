@@ -32,7 +32,7 @@ class DBHelper(object):
     @util.cancellableInlineCallbacks
     def init_(self, navigator=None):
         """Initialize the txros parts of the DBHelper."""
-        self._sub_database = yield self.nh.subscribe('/database/objects', PerceptionObjectArray, self.object_cb)
+        # self._sub_database = yield self.nh.subscribe('/database/objects', PerceptionObjectArray, self.object_cb)
         self._database = yield self.nh.get_service_client("/database/requests", ObjectDBQuery)
         self.navigator = navigator
         if navigator is None:

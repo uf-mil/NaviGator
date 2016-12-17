@@ -67,19 +67,19 @@ class ScanTheCodeMission:
                 scan_the_code = yield self._get_scan_the_code()
             except Exception:
                 print "Could not get scan the code..."
+                yield self.nh.sleep(.01)
+                continue
+
+            try:
+                success, colors = yield self.perception.search(scan_the_code)
+                if success:
+                    defer.returnValue(colors)
+            except Exception as e:
+                print e
                 yield self.nh.sleep(.1)
                 continue
 
-            # try:
-            success, colors = yield self.perception.search(scan_the_code)
-            if success:
-                defer.returnValue(colors)
-            # except Exception as e:
-            #     print e
-            #     yield self.nh.sleep(.1)
-            #     continue
-
-            yield self.nh.sleep(.3)
+            yield self.nh.sleep(.03)
         defer.returnValue(None)
 
     @txros.util.cancellableInlineCallbacks

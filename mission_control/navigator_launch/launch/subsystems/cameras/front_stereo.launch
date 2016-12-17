@@ -4,13 +4,13 @@
   <!-- Nodelet Manager Process -->
   <group ns="stereo">
     <node pkg="nodelet" type="nodelet" name="camera_nodelet_manager"
-          args="manager" />
+          args="manager" output="screen" />
 
     <!-- Left/Right Camera Driver Nodelets -->
 
     <!-- LEFT CAMERA-->
     <node if="$(arg stereo_left)" pkg="nodelet" type="nodelet" name="left_camera1394_nodelet"
-          args="load camera1394/driver camera_nodelet_manager">
+          args="load camera1394/driver camera_nodelet_manager" output="screen">
           <param name="guid" value="00b09d0100e84a44"/>
           <param name="camera_info_url" value="file://$(find navigator_launch)/launch/subsystems/cameras/calibration/${NAME}.yaml"/>
           <param name="frame_id" value="stereo_left_cam"/>
@@ -18,7 +18,6 @@
           <param name="video_mode" value="format7_mode4"/>
           <param name="format7_packet_size" value="3024"/>
           <param name="format7_color_coding" value="raw8"/>
-          <param name="bayer_method" value=""/>
           <param name="binning_x" value="1"/>
           <param name="binning_y" value="1"/>
           <param name="auto_white_balance" value="2"/>
@@ -28,7 +27,7 @@
 
     <!-- RIGHT CAMERA -->
     <node if="$(arg stereo_right)" pkg="nodelet" type="nodelet" name="right_camera1394_nodelet"
-          args="load camera1394/driver camera_nodelet_manager">
+          args="load camera1394/driver camera_nodelet_manager"  output="screen">
           <param name="guid" value="00b09d0100e84a42"/>
           <param name="camera_info_url" value="file://$(find navigator_launch)/launch/subsystems/cameras/calibration/${NAME}.yaml"/>
           <param name="frame_id" value="stereo_right_cam"/>
@@ -38,7 +37,6 @@
           <param name="format7_color_coding" value="raw8"/>
           <param name="binning_x" value="1"/>
           <param name="binning_y" value="1"/>
-          <param name="bayer_method" value=""/>
           <param name="auto_white_balance" value="2"/>
           <param name="use_ros_time" value="true"/>
           <remap from="camera" to="right"/>

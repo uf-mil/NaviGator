@@ -33,7 +33,6 @@ class ImageHolder(object):
     @classmethod
     def from_msg(cls, msg):
         time = msg.header.stamp
-        fprint("Got image! {}".format(time.to_sec()))
         try:
             image = CvBridge().imgmsg_to_cv2(msg)
             return cls(image, time)

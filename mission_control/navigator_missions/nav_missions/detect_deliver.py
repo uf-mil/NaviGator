@@ -17,13 +17,13 @@ from navigator_tools import fprint, MissingPerceptionObject
 import genpy
 
 class DetectDeliverMission:
-    shoot_distance_meters = 3.1
+    shoot_distance_meters = 2.65
     theta_offset = np.pi / 2.0
     spotings_req = 1
     circle_radius = 10
     platform_radius = 0.925
     search_timeout_seconds = 300
-    SHAPE_CENTER_TO_BIG_TARGET = 0.42
+    SHAPE_CENTER_TO_BIG_TARGET = 0.32
     SHAPE_CENTER_TO_SMALL_TARGET = -0.42
     NUM_BALLS = 4
     LOOK_AT_TIME = 5
@@ -90,7 +90,7 @@ class DetectDeliverMission:
         done_circle = False
         @txros.util.cancellableInlineCallbacks
         def do_circle():
-            yield self.navigator.move.circle_point(platform_np).go()
+            yield self.navigator.move.circle_point(platform_np, direction='cw').go()
             done_circle = True
 
         circle_defer = do_circle()
@@ -197,7 +197,7 @@ class DetectDeliverMission:
         move = self.navigator.move.set_position(goal_point).set_orientation(goal_orientation).forward(self.target_offset_meters)
         move = move.left(-self.shooter_baselink_tf._p[1]).forward(-self.shooter_baselink_tf._p[0]) #Adjust for location of shooter
         fprint("Aligning to shoot at {}".format(move), title="DETECT DELIVER", msg_color='green')
-        move_complete = yield move.go(move_type="drive")
+        move_complete = yield move.go(move_type="skid", blind=True)
         defer.returnValue(move_complete)
 
     def get_shape(self):
@@ -318,12 +318,13 @@ class DetectDeliverMission:
 
 @txros.util.cancellableInlineCallbacks
 def setup_mission(navigator):
-    stc_color = yield navigator.mission_params["scan_the_code_color3"].get(raise_exception=False)
-    if stc_color == False:
-        color = "ANY"
-    else:
-        color = stc_color
-    shape = "ANY"
+    #stc_color = yield navigator.mission_params["scan_the_code_color3"].get(raise_exception=False)
+    #if stc_color == False:
+    #    color = "ANY"
+    #else:
+    #    color = stc_color
+    color = "ANY"
+    shape = "CROSS"
     fprint("Setting search shape={} color={}".format(shape, color), title="DETECT DELIVER",  msg_color='green')
     yield navigator.mission_params["detect_deliver_shape"].set(shape)
     yield navigator.mission_params["detect_deliver_color"].set(color)

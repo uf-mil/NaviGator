@@ -30,23 +30,24 @@ def main(navigator, **kwargs):
     fprint("Moving to stc", msg_color='green')
     mission = ScanTheCodeMission(navigator)
     yield mission.init_(navigator.tf_listener)
-    pose, look_at = yield mission.initial_position()
-    yield navigator.move.set_position(pose).look_at(look_at).go()
-    yield navigator.nh.sleep(1)
-    fprint("Finished getting the initial position", msg_color='green')
+    # pose, look_at = yield mission.initial_position()
+    # yield navigator.move.set_position(pose).look_at(look_at).go()
+    # yield navigator.nh.sleep(1)
+    # fprint("Finished getting the initial position", msg_color='green')
 
     # circle = navigator.move.circle_point(look_at).go()
     # circle.addErrback(lambda x: x)
     # yield mission.correct_pose()
     # circle.cancel()
 
-    mission.correct_pose(pose)
-    circle = navigator.move.d_circle_point(look_at, radius=8, granularity=30, direction='cw')
-    # print list(circle)
-    for p in list(circle)[::-1]:
-        if mission.stc_correct:
-            break
-        yield p.go()
+    # This is the one that we are using!
+    # mission.correct_pose(pose)
+    # circle = navigator.move.d_circle_point(look_at, radius=8, granularity=30, direction='cw')
+    # # print list(circle)
+    # for p in list(circle)[::-1]:
+    #     if mission.stc_correct:
+    #         break
+    #     yield p.go()
 
     fprint("Finished getting the correct stc face", msg_color='green')
     colors = yield mission.find_colors()
