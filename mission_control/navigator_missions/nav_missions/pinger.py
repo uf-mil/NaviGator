@@ -31,6 +31,7 @@ class PingerMission:
         self.markers = MarkerArray()
         self.last_id = 0
         self.circle_totem = None
+        self.color_wrong = False
 
     def reset_freq(self):
         return self.reset_client(SetFrequencyRequest(frequency=self.FREQ))
@@ -172,6 +173,7 @@ class PingerMission:
                 fprint("PINGER: circle buoy is too far from where it should be", msg_color='red')
 
             if sorted_3[0].color.r > 0.9:
+                self.color_wrong = True
                 color_3 = "RED"
                 self.new_marker(position=navigator_tools.rosmsg_to_numpy(sorted_3[0].position), color=(1,0,0), time=cur_time)
             elif sorted_3[0].color.g > 0.9:
@@ -184,6 +186,7 @@ class PingerMission:
                 color_1 = "RED"
                 self.new_marker(position=navigator_tools.rosmsg_to_numpy(sorted_1[0].position), color=(1,0,0), time=cur_time)
             elif sorted_1[0].color.g > 0.9:
+                self.color_wrong = True
                 color_1 = "GREEN"
                 self.new_marker(position=navigator_tools.rosmsg_to_numpy(sorted_1[0].position), color=(0,1,0), time=cur_time)
             else:
@@ -223,8 +226,16 @@ class PingerMission:
     def set_active_pinger(self):
         """Set the paramter for the active pinger identified for use in other mission"""
         fprint("PINGER: setting active pinger to Gate_{}".format(int(self.gate_index)+1), msg_color='green')
-        yield self.navigator.mission_params["acoustic_pinger_active_index"].set(int(self.gate_index)+1)
         yield self.get_colored_buoys()
+        if self.color_wrong and self.gate_index == 2:
+            yield self.navigator.mission_params["acoustic_pinger_active_index_correct"].set(1)
+        elif self.color_wrong and self.gate_index == 0:
+            yield self.navigator.mission_params["acoustic_pinger_active_index_correct"].set(3)
+        else:
+            yield self.navigator.mission_params["acoustic_pinger_active_index_correct"].set(int(self.gate_index)+1)
+
+        yield self.navigator.mission_params["acoustic_pinger_active_index"].set(int(self.gate_index)+1)
+        #yield self.get_colored_buoys()
 
     @txros.util.cancellableInlineCallbacks
     def circle_buoy(self):
@@ -277,6 +288,7 @@ class PingerMission:
 @txros.util.cancellableInlineCallbacks
 def safe_exit(navigator, err):
   yield navigator.mission_params["acoustic_pinger_active_index"].set(1)
+  yield navigator.mission_params["acoustic_pinger_active_index_correct"].set(1)
 
 @txros.util.cancellableInlineCallbacks
 def main(navigator, **kwargs):

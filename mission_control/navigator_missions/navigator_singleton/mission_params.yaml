@@ -126,6 +126,11 @@ acoustic_pinger_active_index:
   description: >
     Which gate (as identified in the database) the pinger was found in.
     For example, 2 means Gate_2 is the location of the pinger
+acoustic_pinger_active_index_correct:
+  param: /mission/acoustic_pinger/active_index_correct
+  options: [1,2,3]
+  description: >
+    Which gate the pinger was found in. Adjusted for rules (RED=1)
 
 dock_shape_1:
   param: /mission/identify_dock/shape_1
