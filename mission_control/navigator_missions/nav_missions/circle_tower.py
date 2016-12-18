@@ -31,11 +31,11 @@ def main(navigator, **kwargs):
     all_found = False
 
     # Get colors of intrest and directions
-    #c1 = navigator.mission_params['totem_color_1'].get()
-    #c2 = navigator.mission_params['totem_color_2'].get()
-    #c2 = navigator.mission_params['totem_color_3'].get()
+    c1 = navigator.mission_params['scan_the_code_color1'].get()
+    c2 = navigator.mission_params['scan_the_code_color2'].get()
+    c3 = navigator.mission_params['scan_the_code_color3'].get()
     
-    colors = [c1, c2]
+    colors = [c1, c2,c3]
 
     buoy_field = yield navigator.database_query("BuoyField")
     buoy_field_point = navigator_tools.point_to_numpy(buoy_field.objects[0].position)
@@ -140,6 +140,9 @@ def get_colored_buoy(navigator, color):
         closest = None 
     else:
         closest = sorted(correct_colored, key=lambda totem: _dist_from_bf(navigator_tools.point_to_numpy(totem.position)))[0]
+    
+    if closest is None:
+        closest = yield get_closest_buoy(navigator, [])
 
     defer.returnValue(closest)
 

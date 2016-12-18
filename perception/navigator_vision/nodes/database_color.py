@@ -33,7 +33,6 @@ class ImageHolder(object):
     @classmethod
     def from_msg(cls, msg):
         time = msg.header.stamp
-        fprint("Got image! {}".format(time.to_sec()))
         try:
             image = CvBridge().imgmsg_to_cv2(msg)
             return cls(image, time)
@@ -102,6 +101,7 @@ class ImageHistory(object):
         
         return ImageHolder()
 
+
 class DebugImage(object):
     def __init__(self, topic, encoding="bgr8", queue_size=1, prd=1):
         self.bridge = CvBridge()
@@ -123,13 +123,14 @@ class DebugImage(object):
 class Observation(object):
     history_length = 100  # Default to 100
     
-    @classmethod
+    @property
     def as_message(self):
         msg = ColoramaDebug()
         msg.num_observations = len(self.hues)
 
         msg.mean_value = np.mean(self.values) 
         msg.hues = self.hues
+        return msg
 
     def __init__(self):
         self.hues = deque([], maxlen=self.history_length)
@@ -154,7 +155,7 @@ class Observation(object):
   
     def __repr__(self):
         _str = 'hues: {}\nvalues: {}\ndists: {}\nq_errs: {}'
-        return _str.format(*np.round(map(np.array, [self.hues, self.values, self.dists, self.q_errs]), 3))
+        return _str.format(*np.round(map(np.array, [self.hues, self.values, self.dists, self.q_errs]), 3)[:, :5])
 
     def extend(self, (hues, values, dists, q_diffs)):
         """Add lists of data in at once"""
@@ -332,7 +333,7 @@ class Colorama(object):
                   'q_factor': self.q_factor, 'q_sig': self.q_sig}
 
         w, weights = t_color.compute_confidence([self.v_factor, self.dist_factor, self.q_factor], True, **kwargs)
-        fprint("CONF: {}".format(w))
+        fprint("CONF: {}".format(w[:5]))
         if np.mean(w) < self.conf_reject:
             return None
         
@@ -342,12 +343,12 @@ class Colorama(object):
         
         msg = t_color.as_message 
         msg.id = totem_id
-        msg.confidence = w
+        msg.confidence = w.tolist()
         msg.labels = ["value_errs", "dists", "q_diffs"]
-        msg.weights = weights
-        msg.color = colors[0]
-        msg.est_hues = angle * 2
-        msg.hues = np.array(t_color.hues) * 2
+        msg.weights = np.mean(weights, axis=1)
+        msg.color = color[0]
+        msg.est_hue = angle * 2
+        msg.hues = (np.array(t_color.hues) * 2).tolist()
         self.status_pub.publish(msg)
 
         fprint("Color: {}".format(color[0]))

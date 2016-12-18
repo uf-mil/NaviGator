@@ -39,12 +39,7 @@ class KillInterface(object):
         self.kill_alarm = ab.add_alarm("hw_kill", problem_description="Hardware kill from a kill switch.")
         self.disconnect = ab.add_alarm("kill_system_disconnect")
         
-        self.kill_status = {'overall': False, 'PF': False, 'PA': False, 'SF': False, 'SA': False, 'computer': False, 'remote': False}
-
-        # Which op codes mean what
-        self.true_kill = {'\x10': 'overall', '\x12': 'PF', '\x14': 'PA', '\x16': 'SF', '\x18': 'SA', '\x1a': 'remote', '\x1c': 'computer'}
-        self.false_kill = {'\x11': 'overall', '\x13': 'PF', '\x15': 'PA', '\x17': 'SF', '\x19': 'SA', '\x1b': 'remote', '\x1d': 'computer'}
-
+        self.need_kill = False
         self.killed = False
         # Initial check of kill status
         self.get_status() 
@@ -55,19 +50,25 @@ class KillInterface(object):
 
         al = AlarmListener("kill", self.alarm_kill_cb)
         
+        # Dict of op-codes to functions that need to be run with each code for aysnc responses.
+        self.update_cbs = {'\x10': self.set_kill, '\x11': self.set_unkill, 
+                           '\x12': lambda: True, '\x13': lambda: True, '\x14': lambda: True, '\x15': lambda: True,
+                           '\x16': lambda: True, '\x17': lambda: True, '\x18': lambda: True, '\x19': lambda: True,
+                           '\x1A': lambda: True, '\x1B': lambda: True,
+                           '\x1C': lambda: True, '\x1D': lambda: True,
+                           '\x1E': self.disconnect.clear_alarm, '\x1F': self.disconnect.raise_alarm,}
+        
         while not rospy.is_shutdown():
-            rospy.sleep(0.5)
+            rospy.sleep(.25)
             self.get_status()
             self.control_check()
-
             while self.ser.inWaiting() > 0:
                 self.check_buffer()
-
             if not self.network_kill():
                 self.ping()
             else:
                 rospy.logwarn("Network Kill!")
-    
+
     def network_kill(self):
         if self.network_msg is None:
            return False
@@ -97,13 +98,9 @@ class KillInterface(object):
     def check_buffer(self):
         # The board appears to not be return async data
         resp = self.ser.read(1)
-        rospy.loginfo("Check Buffer response: {}".format(self.to_hex(resp)))
-        if resp in self.true_kill:
-            src = self.true_kill[resp]
-            self.kill_status[src] = True
-        elif resp in self.false_kill:
-            src = self.false_kill[resp]
-            self.kill_status[src] = False
+        if resp in self.update_cbs:
+            rospy.loginfo("Check Buffer response: {}".format(resp))
+            self.update_cbs[resp]()
 
     @thread_lock(lock)
     def request(self, write_str, recv_str=None):
@@ -113,8 +110,8 @@ class KillInterface(object):
         With no `recv_str` passed in the raw result will be returned.
         """
         self.ser.write(write_str)
-        return True 
-        resp = self.ser.read(1) 
+    
+        resp = self.ser.read(1)        
         
         rospy.loginfo("Sent: {}, Rec: {}".format(self.to_hex(write_str), self.to_hex(resp)))
 
@@ -150,30 +147,12 @@ class KillInterface(object):
         
         if self.current_wrencher == 'autonomous':
             self.request('\x42', '\x52')
-        elif self.current_wrencher in ['keyboard', 'rc', 'noop']:
+        elif self.current_wrencher in ['keyboard', 'rc']:
             self.request('\x41', '\x51')
         else:
             self.request('\x40', '\x50')
 
     def get_status(self):
-        killstatus = KillStatus()
-        killstatus.overall = self.kill_status['overall']
-        killstatus.pf = self.kill_status['PF']
-        killstatus.pa = self.kill_status['PA'] 
-        killstatus.sf = self.kill_status['SF']
-        killstatus.sa = self.kill_status['SA']
-        killstatus.remote = self.kill_status['remote']
-        killstatus.computer = self.kill_status['computer']
-        # killstatus.remote_conn = ord(remote_conn) == 1
-        self.killstatus_pub.publish(killstatus)
-
-        # If any of the kill options (except the computer) are true, raise the alarm.
-        if any([killstatus.pf, killstatus.pa, killstatus.sf, killstatus.sa, killstatus.remote]):
-            self.set_kill()
-        else:
-            self.set_unkill()
-
-    def _get_status(self):
         """
         Request an updates all current status indicators
         """
@@ -212,12 +191,12 @@ class KillInterface(object):
             self.set_unkill()
 
     def ping(self):
-        #rospy.loginfo("Pinging")
-        self.request('\x20') 
-        # if self.request('\x20', '\x30'):
-        #     #rospy.loginfo("Ponged")
-        # else:
-        #     rospy.logerr("Incorrect ping response")
+        rospy.loginfo("Pinging")
+        
+        if self.request('\x20', '\x30'):
+            rospy.loginfo("Ponged")
+        else:
+            rospy.logerr("Incorrect ping response")
 
 
 if __name__ == '__main__':
