@@ -185,6 +185,7 @@ class MissionPlanner:
             real_time_left = self._get_real_timeleft()
             if real_time_left < 0:
                 break
+            TimeoutManager.generate_timeouts(time_left, self.missions_left)
             TimeoutManager.generate_timeouts(time_left, real_time_left, self.missions_left)
             m = yield self._get_closest_mission()
             print m.name

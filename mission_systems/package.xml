@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>navigator_mission_systems</name>
+  <version>0.0.0</version>
+  <description>The navigator_mission_systems package</description>
+  <maintainer email='tessbianchi@ufl.edu'>Tess Bianchi</maintainer>
+  <maintainer email='todo@todo.com'>Kevin Allen</maintainer>
+  <maintainer email='todo@todo.com'>Daniel</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>navigator_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>navigator_msgs</run_depend>
+</package>
