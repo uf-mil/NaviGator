@@ -19,6 +19,7 @@ alias navm="rosrun navigator_missions run_mission"
 alias navc="rosrun navigator_missions move_command"
 
 # Alarms
-alias naraise="rosrun navigator_alarm raise"
-alias naclear="rosrun navigator_alarm clear"
-alias navst="rosrun navigator_alarm raise station_hold"
+alias nhold="rosrun ros_alarms raise station-hold"
+
+# Visualization
+alias nviz="rviz -d \$CATKIN_DIR/src/NaviGator/navigator.rviz"
