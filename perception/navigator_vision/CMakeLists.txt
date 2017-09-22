@@ -101,3 +101,13 @@ target_link_libraries(shape_identification
   ${OpenCV_LIBS}
 )
 
+add_executable(pc_colorizer
+  nodes/pc_colorizer.cpp
+)
+add_dependencies(pc_colorizer
+  ${catkin_EXPORTED_TARGETS}
+)
+target_link_libraries(pc_colorizer
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+)
