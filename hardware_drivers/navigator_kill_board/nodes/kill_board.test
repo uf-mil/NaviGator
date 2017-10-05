@@ -1,0 +1,11 @@
+<launch>
+  <!-- Include the alarms.launch file in this test file -->
+  <include file="$(find ros_alarms)/launch/alarms.launch"/>  
+  <param name="is_simulation"  value="true" />
+  <!-- Start up kill board driver -->
+  <node name="kill_board_driver" pkg="navigator_kill_board" type="kill_board_driver.py" clear_params="true">
+  </node>
+
+	<!-- Start up kill board test -->
+  <test test-name="kill_board_test" pkg="navigator_kill_board" type="kill_board_test.py" />
+</launch>
