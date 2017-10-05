@@ -6,6 +6,7 @@ ___author___ = "Tess Bianchi"
 
 
 class ScanTheCodeModel:
+
     """Class the represents Scan The Code Model."""
 
     def __init__(self, points, frame):

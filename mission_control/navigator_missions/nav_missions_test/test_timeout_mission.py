@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import txros
 from mil_misc_tools.text_effects import fprint
-import numpy as np
 
 
 @txros.util.cancellableInlineCallbacks

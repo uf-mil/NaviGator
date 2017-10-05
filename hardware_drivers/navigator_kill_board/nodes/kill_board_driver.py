@@ -13,6 +13,7 @@ lock = threading.Lock()
 
 
 class KillInterface(object):
+
     """
     Driver to interface with NaviGator's kill handeling board, which disconnects power to actuators
     if any of 4 emergency buttons is pressed, a software kill command is sent, or the network hearbeat

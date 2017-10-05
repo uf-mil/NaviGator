@@ -5,6 +5,7 @@ ___author___ = "Tess Bianchi"
 
 
 class ScanTheCodeAction(object):
+
     """A helper class for Scan The Code Mission."""
 
     def __init__(self):

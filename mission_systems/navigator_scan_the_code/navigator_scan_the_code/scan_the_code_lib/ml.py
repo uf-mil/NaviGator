@@ -24,4 +24,3 @@ class Classify(object):
 
 if __name__ == "__main__":
     c = Classify()
-

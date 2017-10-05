@@ -6,6 +6,7 @@ from std_srvs.srv import SetBool, SetBoolResponse
 
 
 class NoopSerial(serial.Serial):
+
     '''
     Inherits from serial.Serial, doing nothing for each function.
     Allows super classes to implement custom behavior for simulating
@@ -59,6 +60,7 @@ class NoopSerial(serial.Serial):
 
 
 class SimulatedSerial(NoopSerial):
+
     '''
     Simulates a serial device, storing a buffer to be read in a program like a normal OS serial device.
 
@@ -68,6 +70,7 @@ class SimulatedSerial(NoopSerial):
 
     Note: NoopSerial and SimulatedSerial are generic and are candidates for mil_common.
     '''
+
     def __init__(self, *args, **kwargs):
         self.buffer = ''
 
@@ -84,6 +87,7 @@ class SimulatedSerial(NoopSerial):
 
 
 class SimulatedKillBoard(SimulatedSerial):
+
     '''
     Pretends to be NaviGator's kill board over serial, responding according to the protocol
     to requests and sending current state periodically

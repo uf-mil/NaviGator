@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-import txros
 from txros import util
 from twisted.internet import reactor, defer
 from object_classification import LidarToImage
 from navigator_msgs.srv import CameraDBQuery, CameraDBQueryResponse
-from object_classification import Config, depicklify
 from mil_tools import CvDebug, fprint
 import os.path
 import numpy as np
@@ -61,14 +59,14 @@ class ObjectClassifier(object):
 
 @util.cancellableInlineCallbacks
 def main():
-    nh = yield txros.NodeHandle.from_argv("object_classifier")
-    config = Config()
+    # nh = yield txros.NodeHandle.from_argv("object_classifier")
+    # config = Config()
     class_file = os.path.abspath(__file__)
     class_file = class_file.split("nodes")[0]
     class_file = class_file + "object_classification/train.p"
 
-    cl = depicklify(class_file)
-    oc = yield ObjectClassifier(nh, cl, config).init_()
+    # cl = depicklify(class_file)
+    # oc = yield ObjectClassifier(nh, cl, config).init_()
 
 if __name__ == "__main__":
     reactor.callWhenRunning(main)

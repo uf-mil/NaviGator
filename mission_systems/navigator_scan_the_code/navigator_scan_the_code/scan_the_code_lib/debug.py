@@ -8,6 +8,7 @@ ___author___ = "Tess Bianchi"
 
 
 class Debug(object):
+
     """Class that contains methods that assist with debugging with images."""
 
     def __init__(self, nh=None, w=1000, h=800, total=8, win_name="debug", wait=True):
@@ -45,7 +46,8 @@ class Debug(object):
         """
         Add an image to show to either with a topic or using cv2.imshow.
 
-        @param name = a unique key name for the image, use the same name if you want to switch out this image for another
+        @param name = a unique key name for the image,
+        use the same name if you want to switch out this image for another
         @param wait = the amount of wait time for the imshow image
         """
         if topic != "image":

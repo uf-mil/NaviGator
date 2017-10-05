@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# flake8: noqa
 """Mission Planner Module that uses a DAG and YAML to find which mission to perform."""
 from txros import util, NodeHandle
 from twisted.internet import defer
@@ -14,6 +15,7 @@ __author__ = "Tess Bianchi"
 
 
 class MissionPlanner:
+
     """The class that plans which mission to do next."""
 
     def __init__(self, mode='r', total_minutes=30):
@@ -137,7 +139,8 @@ class MissionPlanner:
         if hasattr(err, "type") and err.type == defer.CancelledError:  # This means there was a timeout
             fprint(self.current_mission.name, msg_color="red", title="MISSION TIMEOUT")
             yield self.publish("TimingOut")
-            if (TimeoutManager.can_repeat(self.missions_left, self._get_time_left(), self.current_mission)) or len(self.missions_left) == 1:
+            if (TimeoutManager.can_repeat(
+                    self.missions_left, self._get_time_left(), self.current_mission)) or len(self.missions_left) == 1:
                 yield self.publish("Retrying")
                 self.failed = False
                 self.current_mission.timeout = self.current_mission.min_time
@@ -190,5 +193,6 @@ class MissionPlanner:
             print m.name
             yield self._run_mission(m)
 
-        fprint("MISSIONS COMPLETE, TOTAL RUN TIME: {}".format((self.nh.get_time() - self.start_time).to_sec()), msg_color="green")
+        fprint("MISSIONS COMPLETE, TOTAL RUN TIME: {}".format(
+            (self.nh.get_time() - self.start_time).to_sec()), msg_color="green")
         fprint("MISSIONS COMPLETE, TOTAL POINTS: {}".format((self.points), msg_color="green"))

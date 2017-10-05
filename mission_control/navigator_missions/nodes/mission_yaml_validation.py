@@ -3,7 +3,6 @@ import yaml
 import os
 import nav_missions
 from graphviz import Digraph
-from navigator_msgs.msg import PerceptionObject
 
 
 class MissionYAMLValidation(object):

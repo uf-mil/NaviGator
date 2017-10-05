@@ -17,6 +17,7 @@ __author__ = "Tess Bianchi"
 
 
 class Mission(object):
+
     """The class that represents a mission."""
 
     def __init__(self, name, item_dep, timeout):
@@ -53,6 +54,7 @@ class Mission(object):
 
 
 class MissionPlanner:
+
     """The class that plans which mission to do next."""
 
     def __init__(self, yaml_text, mode='r'):
@@ -114,7 +116,7 @@ class MissionPlanner:
             is_base = mission["is_base"]
             timeout = mission["timeout"]
             if timeout == 'inf':
-                timeout = sys.maxint
+                timeout = sys.maxsize
             m = Mission(name, obj_dep, timeout)
             my_missions[name] = m
             if is_base:
@@ -155,7 +157,8 @@ class MissionPlanner:
         CALLED ASYNCHRONOUS
         """
         for mission in self.tree:
-            if self.can_complete(mission) and not self._is_in_queue(mission) and mission.name != self.current_mission_name:
+            if self.can_complete(mission) and not self._is_in_queue(
+                    mission) and mission.name != self.current_mission_name:
                 fprint("mission: {}".format(mission.name), msg_color="blue", title="ADDING")
                 self.queue.put(mission)
 

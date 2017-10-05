@@ -14,7 +14,7 @@ class WrenchArbiter(object):
 
         # Set the four receiving variables
         self.rc_wrench = None
-	self.rc_emergency = None
+        self.rc_emergency = None
         self.keyboard_wrench = None
         self.autonomous_wrench = None
 
