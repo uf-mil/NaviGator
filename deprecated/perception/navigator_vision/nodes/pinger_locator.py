@@ -25,7 +25,7 @@ while True:
             dir_ = navigator_tools.rosmsg_to_numpy(processed_ping.position)
             mv_mag = 2
             mv_hyd_frame = dir_ / np.linalg.norm(dir_)
-            pinger_move = navigator.move.set_position(navigator_tools.rosmsg_to_numpy(processed_ping.position)).go()
+            pinger_move = navigator.move.set_position(navigator_tools.rosmsg_to_numpy(processed_ping.position)).go()  # noqa
 
             print "Heading towards pinger"
         else:
@@ -39,7 +39,7 @@ while True:
 def main(navigator):
     kill_alarm_broadcaster, kill_alarm = single_alarm(
         'kill', action_required=True, problem_description="Killing wamv to listen to pinger")
-    df = defer.Deferred().addCallback(head_for_pinger)
+    df = defer.Deferred().addCallback(head_for_pinger)  # noqa
     df.callback(navigator)
     try:
         yield txros.util.wrap_timeout(df, 15, cancel_df_on_timeout=True)

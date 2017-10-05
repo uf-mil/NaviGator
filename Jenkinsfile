@@ -24,7 +24,8 @@ dockerNode(image: 'uf-mil:navigator') {
 	}
 	stage("Format") {
 		sh '''
-			if [[ ! -z "$(python2.7 -m flake8 --ignore E731 --max-line-length=120 --exclude=__init__.py .)" ]]; then
+			if [[ ! -z "$(python2.7 -m flake8 --ignore E731,F999 --exclude=./deprecated,./gnc/navigator_path_planner/lqRRT --max-line-length=120 --exclude=__init__.py .
+)" ]]; then
 				echo "The preceding Python files are not formatted correctly"
 				exit 1
 			fi
