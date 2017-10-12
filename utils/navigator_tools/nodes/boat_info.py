@@ -1,27 +1,27 @@
 #!/usr/bin/env python
 from geometry_msgs.msg import WrenchStamped
-from navigator_msgs.srv import WrenchSelect
+from topic_tools.srv import MuxSelect
 import rospy
 from std_msgs.msg import Bool, String, Float32
 from visualization_msgs.msg import Marker, MarkerArray
-from navigator_alarm import AlarmListener
+from ros_alarms import AlarmListener
 import numpy as np
 
 class RvizStrings(object):
     ID = 1337
     NS = "boat_info"
     X_POS = -4.0
-  
+
     def __init__(self):
         self.station_holding = False
         self.kill_alarm = False
         self.voltage = None
         self.wrench = None
-        rospy.Subscriber("/wrench/current", String, self.wrench_current_cb)
+        rospy.Subscriber("/wrench/selected", String, self.wrench_current_cb)
         rospy.Subscriber("/battery_monitor",Float32, self.battery_monitor_cb)
         self.markers_pub = rospy.Publisher('/boat_info', Marker, queue_size=10)
-        self.kill_listener = AlarmListener('kill', self.kill_alarm_cb)
-        self.station_hold_listner = AlarmListener('station_hold', self.station_alarm_cb)
+        self.kill_listener = AlarmListener('kill', callback_funct=self.kill_alarm_cb)
+        self.station_hold_listner = AlarmListener('station-hold', callback_funct=self.station_alarm_cb)
 
     def update(self):
         marker = Marker()
@@ -45,14 +45,14 @@ class RvizStrings(object):
             marker.text += "\nStation Holding"
         if self.kill_alarm:
             marker.text += "\nKILLED"
-        self.markers_pub.publish(marker)  
+        self.markers_pub.publish(marker)
 
     def station_alarm_cb(self, alarm):
-        self.station_holding = not alarm.clear
+        self.station_holding = alarm.raised
         self.update()
 
     def kill_alarm_cb(self, alarm):
-        self.kill_alarm = not alarm.clear
+        self.kill_alarm = alarm.raised
         self.update()
 
     def wrench_current_cb(self,string):
