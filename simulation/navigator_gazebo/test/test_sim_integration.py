@@ -28,8 +28,13 @@ class TestSimIntegration(unittest.TestCase):
             "/camera/front/left/camera_info",
             "/camera/down/camera_info",
             "/camera/starboard/camera_info"]
-        for topic in topics_cam_info:
-            rospy.Subscriber(topic, CameraInfo, self.cam_info_cb)
+        info_functions = [
+            self.cam_info_right_cb,
+            self.cam_info_left_cb,
+            self.cam_info_down_cb,
+            self.cam_info_starboard_cb]
+        for topic, function in itertools.izip(topics_cam_info, info_functions):
+            rospy.Subscriber(topic, CameraInfo, function)
         # subscribe to camera image topics
         self.image_msg = []
         topics_image = [
@@ -37,28 +42,30 @@ class TestSimIntegration(unittest.TestCase):
             "/camera/front/left/image_color",
             "/camera/down/image_color",
             "/camera/starboard/image_color"]
-        for topic in topics_image:
-            rospy.Subscriber(topic, Image, self.cam_image_cb)
+        image_functions = [
+            self.cam_image_right_cb,
+            self.cam_image_left_cb,
+            self.cam_image_down_cb,
+            self.cam_image_starboard_cb]
+        for topic, function in itertools.izip(topics_image, image_functions):
+            rospy.Subscriber(topic, Image, function)
         # subscribe to pointcloud topic
         self.pc_info_msg = []
         self.pc_msg = []
         rospy.Subscriber("/velodyne_points", PointCloud2, self.points_cb)
 
     def odom_cb(self, msg):
-        self.odom_pos_msg.append(msg.pose.pose.position.x)
-        self.odom_pos_msg.append(msg.pose.pose.position.y)
-        self.odom_pos_msg.append(msg.pose.pose.position.z)
-        self.odom_ori_msg.append(msg.pose.pose.orientation.x)
-        self.odom_ori_msg.append(msg.pose.pose.orientation.y)
-        self.odom_ori_msg.append(msg.pose.pose.orientation.z)
-        self.odom_ori_msg.append(msg.pose.pose.orientation.w)
+        pos = msg.pose.pose.position
+        ori = msg.pose.pose.orientation
+        self.odom_pos_msg = [pos.x, pos.y, pos.z]
+        self.odom_ori_msg = [ori.x, ori.y, ori.z, ori.w]
 
     def test_odom(self):
         timeout = rospy.Time.now() + rospy.Duration(1)
         while ((self.odom_pos_msg == False or self.odom_ori_msg == False)
                and rospy.Time.now() < timeout):
-            rospy.Sleep(0.01)
-        self.assertTrue(self.odom_pos_msg and self.odom_ori_msg)
+            rospy.sleep(0.01)
+        self.assertTrue(len(self.odom_pos_msg) == 3 and len(self.odom_ori_msg) == 4)
         initial_pos = [-1.2319, 0.0, 0.0]
         initial_ori = [0.0, 0.0, 0.0, 1.0]
         self.verify_pos_ori(
@@ -69,20 +76,17 @@ class TestSimIntegration(unittest.TestCase):
             "/odom")
 
     def absodom_cb(self, msg):
-        self.absodom_pos_msg.append(msg.pose.pose.position.x)
-        self.absodom_pos_msg.append(msg.pose.pose.position.y)
-        self.absodom_pos_msg.append(msg.pose.pose.position.z)
-        self.absodom_ori_msg.append(msg.pose.pose.orientation.x)
-        self.absodom_ori_msg.append(msg.pose.pose.orientation.y)
-        self.absodom_ori_msg.append(msg.pose.pose.orientation.z)
-        self.absodom_ori_msg.append(msg.pose.pose.orientation.w)
+        pos = msg.pose.pose.position
+        ori = msg.pose.pose.orientation
+        self.absodom_pos_msg = [pos.x, pos.y, pos.z]
+        self.absodom_ori_msg = [ori.x, ori.y, ori.z, ori.w]
 
     def test_absodom(self):
         timeout = rospy.Time.now() + rospy.Duration(1)
         while ((self.absodom_pos_msg == False or self.absodom_ori_msg ==
                 False) and rospy.Time.now() < timeout):
-            rospy.Sleep(0.01)
-        self.assertTrue(self.absodom_pos_msg and self.absodom_ori_msg)
+            rospy.sleep(0.01)
+        self.assertTrue(len(self.absodom_pos_msg) == 3 and len(self.absodom_ori_msg) == 4)
         initial_pos = [743789.637462, -5503821.62581, 3125622.25266]
         initial_ori = [0.0, 0.0, 0.0, 1.0]
         self.verify_pos_ori(
@@ -105,44 +109,88 @@ class TestSimIntegration(unittest.TestCase):
                     "Error: {} orientation is: {} should be {}".format(
                         topic, actual, initial)))
 
-    def cam_info_cb(self, msg):
-        self.cam_info_msg.append([msg.width, msg.height])
+    def cam_info_right_cb(self, msg):
+        if len(self.cam_info_msg) == 0:
+            self.cam_info_msg.append([msg.width, msg.height])
+        elif len(self.cam_info_msg) > 0:
+            self.cam_info_msg[0] = [msg.width, msg.height]
 
-    def cam_image_cb(self, msg):
-        self.cam_image_msg.append(msg.data)
+    def cam_info_left_cb(self, msg):
+        if len(self.cam_info_msg) == 1:
+            self.cam_info_msg.append([msg.width, msg.height])
+        elif len(self.cam_info_msg) > 1:
+            self.cam_info_msg[1] = [msg.width, msg.height]
+
+    def cam_info_down_cb(self, msg):
+        if len(self.cam_info_msg) == 2:
+            self.cam_info_msg.append([msg.width, msg.height])
+        elif len(self.cam_info_msg) > 2:
+            self.cam_info_msg[2] = [msg.width, msg.height]
+
+    def cam_info_starboard_cb(self, msg):
+        if len(self.cam_info_msg) == 3:
+            self.cam_info_msg.append([msg.width, msg.height])
+        elif len(self.cam_info_msg) > 3:
+            self.cam_info_msg[3] = [msg.width, msg.height]
+
+    def cam_image_right_cb(self, msg):
+        if len(self.cam_image_msg) == 0:
+            self.cam_image_msg.append(msg.data)
+        elif len(self.cam_image_msg) > 0:
+            self.cam_image_msg[0] = msg.data
+
+    def cam_image_left_cb(self, msg):
+        if len(self.cam_image_msg) == 1:
+            self.cam_image_msg.append(msg.data)
+        elif len(self.cam_image_msg) > 1:
+            self.cam_image_msg[1] = msg.data
+
+    def cam_image_down_cb(self, msg):
+        if len(self.cam_image_msg) == 2:
+            self.cam_image_msg.append(msg.data)
+        elif len(self.cam_image_msg) > 2:
+            self.cam_image_msg[2] = msg.data
+
+    def cam_image_starboard_cb(self, msg):
+        if len(self.cam_image_msg) == 3:
+            self.cam_image_msg.append(msg.data)
+        elif len(self.cam_image_msg) > 3:
+            self.cam_image_msg[3] = msg.data
 
     def test_image(self):
         timeout = rospy.Time.now() + rospy.Duration(1)
-        while ((self.cam_info_msg == False or self.cam_image_msg ==
-                False) and rospy.Time.now() < timeout):
-            rospy.Sleep(0.01)
-        self.assertTrue(self.cam_info_msg and self.cam_image_msg)
+        while ((len(self.cam_info_msg) != 4 or len(self.cam_image_msg) !=
+                4) and rospy.Time.now() < timeout):
+            rospy.sleep(0.01)
+        self.assertTrue(len(self.cam_info_msg) == 4 and len(self.cam_image_msg) ==
+                        4, msg="{} {}".format(len(self.cam_info_msg), len(self.cam_image_msg)))
         initial_res = [960, 600]
         self.verify_info(self.cam_info_msg, initial_res, "/camera")
-        self.verify_not_empty(self.cam_image_msg)
+        self.verify_not_empty(self.cam_image_msg, 4)
 
     def points_cb(self, msg):
-        self.pc_info_msg.append([msg.width, msg.height])
-        self.pc_msg.append(msg.data)
-        self.pc_msg.append(msg.data)
+        self.pc_info_msg = [[msg.width, msg.height]]
+        self.pc_msg = [msg.data]
 
     def test_pointcloud(self):
         timeout = rospy.Time.now() + rospy.Duration(1)
-        while((self.pc_info_msg == False or self.pc_msg == False) and rospy.Time.now() < timeout):
-            rospy.Sleep(0.01)
-        self.assertTrue(self.pc_info_msg and self.pc_msg)
+        while((len(self.pc_info_msg) != 1 or len(self.pc_msg) != 1) and rospy.Time.now() < timeout):
+            rospy.sleep(0.01)
+        self.assertTrue(len(self.pc_info_msg) == 1 and len(
+            self.pc_msg) == 1)
         initial_res = [209, 1]
         self.verify_info(self.pc_info_msg, initial_res, "/velodyne_points")
-        self.verify_not_empty(self.pc_msg)
+        self.verify_not_empty(self.pc_msg, 1)
 
-    def verify_not_empty(self, data_lists):
-        self.assertTrue(self.is_not_empty(data_lists))
-
-    def is_not_empty(self, data_lists):
+    def verify_not_empty(self, data_lists, num_topics):
+        self.assertEqual(
+            len(data_lists),
+            num_topics,
+            msg="Number of topics is {}, should be {}".format(
+                len(data_lists),
+                num_topics))
         for data_list in data_lists:
-            if len(data_list) == 0:
-                return False
-        return True
+            self.assertNotEqual(len(data_list), 0, msg="data is empty")
 
     def verify_info(self, res_info, initial_info, topic):
         for msg in res_info:
