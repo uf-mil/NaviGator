@@ -1,6 +1,5 @@
 from __future__ import division
 import warnings
-
 import numpy as np
 from tf import transformations
 from mil_msgs.msg import PoseTwist, MoveToGoal
@@ -43,11 +42,9 @@ def get_perpendicular(a, b=None):
     return normalized(x)
 
 
-def triad(xxx_todo_changeme, xxx_todo_changeme1):
+def triad((a1, a2), (b1, b2)):
     # returns quaternion that rotates b1 to a1 and b2 near a2
     # can get orientation by passing in (global, local)
-    (a1, a2) = xxx_todo_changeme
-    (b1, b2) = xxx_todo_changeme1
     aa = get_perpendicular(a1, a2)
     A = np.array([normalized(a1), aa, normalized(np.cross(a1, aa))])
     bb = get_perpendicular(b1, b2)
@@ -94,13 +91,11 @@ def get_valid_point(nav, point):
 
 
 class PoseEditor2(object):
-
     """
     Used to chain movements together
 
     ex:
         >>> res = yield p.forward(2, 'm').down(1, 'ft').yaw_left(50, 'deg').go()
-
         Will move forward 2 meters, down 1 foot, all while yawing left 50 degrees.
 
     ex:
@@ -113,7 +108,6 @@ class PoseEditor2(object):
     Some special cases (these can't be chained):
         >>> circle = p.circle_point([0, 1, 0])
         >>> res = yield circle.go()
-
         Will circle the enu point [0, 1, 0] counter clockwise holding the current orientation and distance
         from the point.
 
@@ -149,7 +143,7 @@ class PoseEditor2(object):
         return np.linalg.norm(self.position - self.nav.pose[0])
 
     def go(self, *args, **kwargs):
-        if self.nav.killed or self.nav.odom_loss:
+        if self.nav.killed is True or self.nav.odom_loss is True:
             # What do we want to do with missions when the boat is killed
             fprint("Boat is killed, ignoring go command!", title="POSE_EDITOR", msg_color="red")
 
@@ -157,10 +151,8 @@ class PoseEditor2(object):
                 failure_reason = 'boat_killed'
 
             return Res()
-
         if len(self.kwargs) > 0:
             kwargs = dict(kwargs.items() + self.kwargs.items())
-
         goal = self.nav._moveto_client.send_goal(self.as_MoveGoal(*args, **kwargs))
         self.result = goal.get_result()
         return self.result
@@ -260,8 +252,8 @@ class PoseEditor2(object):
     def circle_point(self, point, *args, **kwargs):
         return self.spiral_point(point, *args, **kwargs)
 
-    def d_spiral_point(self, point, radius, granularity=8,
-                       revolutions=1, direction='ccw', theta_offset=0, meters_per_rev=0):
+    def d_spiral_point(
+            self, point, radius, granularity=8, revolutions=1, direction='ccw', theta_offset=0, meters_per_rev=0):
         """
         Sprials a point using discrete moves
         This produces a generator
@@ -307,7 +299,6 @@ class PoseEditor2(object):
         if 'focus' in kwargs:
             if not isinstance(kwargs['focus'], Point):
                 kwargs['focus'] = mil_tools.numpy_to_point(kwargs['focus'])
-
         if 'speed_factor' in kwargs and isinstance(kwargs['speed_factor'], float):
             # User wants a uniform speed factor
             sf = kwargs['speed_factor']

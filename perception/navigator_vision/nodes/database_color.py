@@ -143,7 +143,7 @@ class Observation(object):
     def __len__(self):
         return len(self.hues)
 
-    def __iadd__(self, xxx_todo_changeme):
+    def __iadd__(self, param_tuple):
         """
         Add observations like:
             >>> co += [0.65, 0.4, ..., 0.1]
