@@ -34,12 +34,13 @@ def yaml_parse(yaml_text, navigator, total_time):
         num_mission_deps = len(mis_dep)
         if mis_dep == "None":
             num_mission_deps = 0
-        if type(mis_dep) is not list:
+        if not isinstance(mis_dep, list):
             num_mission_deps = 1
 
         if "mission_script" in mission.keys():
             mission_script = mission["mission_script"]
-            m = Mission(name, marker, min_time, weight, points, looking_for, num_mission_deps, mission_script=mission_script)
+            m = Mission(name, marker, min_time, weight, points,
+                        looking_for, num_mission_deps, mission_script=mission_script)
         else:
             m = Mission(name, marker, min_time, weight, points, looking_for, num_mission_deps)
         my_missions[name] = m
@@ -58,7 +59,7 @@ def yaml_parse(yaml_text, navigator, total_time):
     # Go through the missions and give them all children dependencies
     for mission_name in mission_to_mission_dep.keys():
         parent_name = mission_to_mission_dep[mission_name]
-        if type(parent_name) is not list:
+        if not isinstance(parent_name, list):
             parent_names = []
             parent_names.append(parent_name)
         else:

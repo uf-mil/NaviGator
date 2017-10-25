@@ -7,6 +7,7 @@ ___author___ = "Tess Bianchi"
 
 
 class RectangleFinder(object):
+
     """Class that contains functionality to find rectangles."""
 
     def __init__(self):
@@ -47,7 +48,7 @@ class RectangleFinder(object):
         lines = []
         for i in range(0, w):
             column = edges[0: h, i]
-            max_length = -sys.maxint
+            max_length = -sys.maxsize
             max_top = 0
             max_bottom = 0
             curr_count = 0
@@ -92,10 +93,10 @@ class RectangleFinder(object):
         # Run heuristics to decide if they are valid lines
         for cluster in lines_by_cluster.keys():
             lines = lines_by_cluster[cluster]
-            bottom_y = -sys.maxint
-            top_y = sys.maxint
-            left_x = sys.maxint
-            right_x = -sys.maxint
+            bottom_y = -sys.maxsize
+            top_y = sys.maxsize
+            left_x = sys.maxsize
+            right_x = -sys.maxsize
             xval = 0
             for line in lines:
                 length, top, bottom, x = line

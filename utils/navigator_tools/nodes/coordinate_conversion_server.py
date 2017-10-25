@@ -10,7 +10,9 @@ from rawgps_common.gps import ecef_from_latlongheight, enu_from_ecef_tf, latlong
 from nav_msgs.msg import Odometry
 from navigator_msgs.srv import CoordinateConversion, CoordinateConversionResponse
 
+
 class Converter(object):
+
     @txros.util.cancellableInlineCallbacks
     def init(self, nh, advertise_service=False):
         self.nh = nh
@@ -91,7 +93,7 @@ def main():
     c = Converter()
     yield c.init(nh, advertise_service=True)
 
-    yield defer.Deferred() # never exit
+    yield defer.Deferred()  # never exit
 
 if __name__ == "__main__":
     txros.util.launch_main(main)

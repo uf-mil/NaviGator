@@ -24,6 +24,7 @@ rospy.init_node("battery_monitor")
 
 
 class BatteryMonitor():
+
     '''
     Monitors the battery voltage measured by the 4 motors on Navigator,
     publishing a moving average of these measurements to /battery_monitor
@@ -50,7 +51,8 @@ class BatteryMonitor():
 
     def add_voltage(self, msg):
         '''
-        This is the callback function for feedback from all four motors. It appends the new readings to the end of the list and
+        This is the callback function for feedback from all four motors.
+        It appends the new readings to the end of the list and
         ensures that the list stays under 1000 entries.
         '''
 
@@ -62,7 +64,8 @@ class BatteryMonitor():
 
     def publish_voltage(self, event):
         '''
-        Publishes the average voltage across all four thrusters to the battery_voltage node as a standard Float32 message and runs
+        Publishes the average voltage across all four thrusters
+        to the battery_voltage node as a standard Float32 message and runs
         the voltage_check
         '''
 

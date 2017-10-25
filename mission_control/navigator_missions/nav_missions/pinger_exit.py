@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 from __future__ import division
 import txros
-import std_srvs.srv
 import numpy as np
-from navigator_msgs.srv import FindPinger, FindPingerRequest, SetFrequency, SetFrequencyRequest
-from geometry_msgs.msg import Point
-from std_srvs.srv import SetBool, SetBoolRequest
 import mil_tools
-from visualization_msgs.msg import Marker, MarkerArray
 from mil_misc_tools.text_effects import fprint
-import rospy
 
 ___author___ = "Kevin Allen"
+
 
 class PingerExitMission:
     OBSERVE_DISTANCE_METERS = 6
@@ -45,7 +40,7 @@ class PingerExitMission:
     def set_side(self):
         """Set 2 points to observe the pinger from, in front of gates 1 and 3"""
         self.get_gate_perp()
-        #Make sure they are actually in a line
+        # Make sure they are actually in a line
         if np.isnan(self.g_perp[0]) or np.isnan(self.g_perp[1]):
             raise Exception("Gates are not in a line")
         neg = yield self.navigator.mission_params["pinger_negate"].get()
@@ -57,7 +52,7 @@ class PingerExitMission:
         self.get_gate_thru_points()
         yield self.navigator.move.set_position(self.gate_thru_points[0]).look_at(self.gate_thru_points[1]).go()
         yield self.navigator.move.set_position(self.gate_thru_points[1]).go()
-        #for p in self.gate_thru_points:
+        # for p in self.gate_thru_points:
         #    yield self.navigator.move.set_position(p).go(initial_plan_time=5)
 
     def get_gate_perp(self):
@@ -65,7 +60,7 @@ class PingerExitMission:
         delta_g = self.gate_poses[2] - self.gate_poses[0]
         rot_right = np.array([[0, -1], [1, 0]])
         g_perp = rot_right.dot(delta_g)
-        g_perp = g_perp /  np.linalg.norm(g_perp)
+        g_perp = g_perp / np.linalg.norm(g_perp)
         self.g_perp = g_perp
         self.g_line = delta_g / np.linalg.norm(delta_g)
 
@@ -81,18 +76,17 @@ class PingerExitMission:
 
     @txros.util.cancellableInlineCallbacks
     def run(self):
-        fprint("PINGER EXIT: Starting", msg_color='green') 
+        fprint("PINGER EXIT: Starting", msg_color='green')
         self.gate_index = yield self.navigator.mission_params["acoustic_pinger_active_index"].get()
         self.gate_index = self.gate_index - 1
         yield self.get_objects()
         yield self.set_side()
         self.get_gate_thru_points()
         yield self.go_thru_gate()
-        fprint("PINGER EXIT: Done", msg_color='green') 
+        fprint("PINGER EXIT: Done", msg_color='green')
+
 
 @txros.util.cancellableInlineCallbacks
 def main(navigator, **kwargs):
     mission = PingerExitMission(navigator)
     yield mission.run()
-
-

@@ -11,6 +11,7 @@ ___author___ = "Tess Bianchi"
 
 
 class RectangleFinderClustering(object):
+
     """Class that contains functionality to find rectangles."""
 
     def __init__(self):
@@ -152,7 +153,8 @@ class RectangleFinderClustering(object):
             if energy < 0:
                 "LOW ENERGY!"
                 continue
-            print num, "area: ", area, "filled:", top, "total:", bottom, 'rat', top / bottom, "l/w", abs(2.5 - l / w), "vcost",
+            print num, "area: ", area, "filled:", top, "total:", bottom, 'rat', top / bottom, "l/w", abs(
+                2.5 - l / w), "vcost",
             vcost, "energy", energy
             energys.append(energy)
             correct_masks.append(mask_obj)

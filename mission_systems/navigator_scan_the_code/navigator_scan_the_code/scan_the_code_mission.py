@@ -4,15 +4,16 @@ import txros
 import genpy
 from twisted.internet import defer
 import sys
-from sensor_msgs.msg import Image, CameraInfo
+from sensor_msgs.msg import CameraInfo
 from scan_the_code_lib import ScanTheCodeAction, ScanTheCodePerception, Debug
-from navigator_msgs.srv import ObjectDBQuery, ObjectDBQueryRequest
+from navigator_msgs.srv import ObjectDBQuery
 from navigator_tools import DBHelper
 from mil_tools import fprint
 ___author___ = "Tess Bianchi"
 
 
 class ScanTheCodeMission:
+
     """Class that contains all the functionality for Scan The Code."""
 
     def __init__(self, navigator):
@@ -56,7 +57,7 @@ class ScanTheCodeMission:
         defer.returnValue(ans)
 
     @txros.util.cancellableInlineCallbacks
-    def find_colors(self, timeout=sys.maxint):
+    def find_colors(self, timeout=sys.maxsize):
         """Find the colors of scan the code."""
         length = genpy.Duration(timeout)
         start = self.nh.get_time()
@@ -81,7 +82,7 @@ class ScanTheCodeMission:
         defer.returnValue(None)
 
     @txros.util.cancellableInlineCallbacks
-    def initial_position(self, timeout=sys.maxint):
+    def initial_position(self, timeout=sys.maxsize):
         """Get the initial position of scan the code."""
         length = genpy.Duration(timeout)
         start = self.nh.get_time()
@@ -97,7 +98,7 @@ class ScanTheCodeMission:
             defer.returnValue(self.action.initial_position(scan_the_code))
 
     @txros.util.cancellableInlineCallbacks
-    def correct_pose(self, pose, timeout=sys.maxint):
+    def correct_pose(self, pose, timeout=sys.maxsize):
         """Check to see if the boat pose needs to be corrected to get an optimal viewing angle."""
         length = genpy.Duration(timeout)
         start = self.nh.get_time()

@@ -3,6 +3,7 @@ from scanthecode_model import ScanTheCodeModel
 
 
 class ScanTheCodeModelTracker:
+
     """Class that contains the functionality to track a ScanTheCode."""
 
     def __init__(self):
