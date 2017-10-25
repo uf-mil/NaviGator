@@ -29,7 +29,7 @@ def main(navigator, **kwargs):
     ogrid = OccupancyGridFactory(navigator)
 
     explored_ids = []
-    # all_found = False
+    all_found = False
 
     # Get colors of intrest and directions
     c1 = navigator.mission_params['scan_the_code_color1'].get()
@@ -43,7 +43,7 @@ def main(navigator, **kwargs):
     _dist_from_bf = lambda pt: np.linalg.norm(buoy_field_point - pt)
 
     # We want to go to an observation point based on solar position
-    # center = navigator.move.set_position(buoy_field_point).set_orientation(get_solar_q())
+    center = navigator.move.set_position(buoy_field_point).set_orientation(get_solar_q())
     searched = []
 
     for color in colors:
@@ -257,7 +257,7 @@ class OccupancyGridFactory(object):
         np_center = np.array(center)
         np_origin = np.append((np_center - size / 2)[:2], 0)
         origin = mil_tools.numpy_quat_pair_to_pose(np_origin, [0, 0, 0, 1])
-        # grid = np.zeros((size / self.resolution, size / self.resolution))
+        grid = np.zeros((size / self.resolution, size / self.resolution))
         ogrid = OccupancyGrid()
         ogrid.header = mil_tools.make_header(frame='enu')
         ogrid.info.origin = origin
