@@ -12,6 +12,7 @@ import numpy as np
 from copy import deepcopy
 
 from dynamic_reconfigure.server import Server
+from dynamic_reconfigure.client import Client
 from navigator_msg_multiplexer.cfg import OgridConfig
 from nav_msgs.msg import OccupancyGrid, Odometry
 
@@ -49,7 +50,6 @@ def transform_enu_to_ogrid(enu_points, grid):
         into the grid frame
     """
     enu_points = np.array(enu_points)
-
     if enu_points.size > 3:
         enu_points[:, 2] = 1
 
@@ -64,7 +64,6 @@ def transform_ogrid_to_enu(grid_points, grid):
         into the ENU frame
     """
     grid_points = np.array(grid_points)
-
     if grid_points.size > 3:
         grid_points[:, 2] = 1
 
@@ -88,7 +87,6 @@ def get_enu_corners(grid):
 
 
 class OGrid:
-
     def __init__(self, topic, replace=False, frame_id='enu'):
         # Assert that the topic is valid
         self.last_message_stamp = None
@@ -114,7 +112,6 @@ class OGrid:
 
 
 class OGridServer:
-
     def __init__(self, frame_id='enu', map_size=500, resolution=0.3, rate=1):
         self.frame_id = frame_id
         self.ogrids = {}
@@ -142,6 +139,7 @@ class OGridServer:
         self.publisher = rospy.Publisher('/ogrid_master', OccupancyGrid, queue_size=1)
 
         self.ogrid_server = Server(OgridConfig, self.dynamic_cb)
+        Client("bounds_server", config_callback=self.bounds_cb)
         self.ogrid_server.update_configuration({'width': 500})
 
         rospy.Service("/center_ogrid", Trigger, self.center_ogrid)
@@ -210,7 +208,6 @@ class OGridServer:
     def create_grid(self, map_size):
         """
         Creates blank ogrids for everyone for the low low price of $9.95!
-
         `map_size` should be in the form of (h, w)
         """
 
@@ -253,7 +250,6 @@ class OGridServer:
                 if ogrid.nav_ogrid is None or ogrid.callback_delta > self.ogrid_timeout:
                     # fprint("Ogrid too old!")
                     continue
-
                 # Proactively checking for errors.
                 # This should be temporary but probably wont be.
                 l_h, l_w = ogrid.nav_ogrid.info.height, ogrid.nav_ogrid.info.width
@@ -267,7 +263,6 @@ class OGridServer:
                 corners = get_enu_corners(ogrid.nav_ogrid)
                 index_limits = transform_enu_to_ogrid(corners, ogrid.nav_ogrid)
                 index_limits = transform_between_ogrids(index_limits, ogrid.nav_ogrid, global_ogrid)[:, :2]
-
                 l_x_min = index_limits[0][0]
                 l_x_max = index_limits[1][0]
                 l_y_min = index_limits[0][1]
@@ -287,15 +282,12 @@ class OGridServer:
                 index_height = l_ogrid_start[1] + end_y - start_y
                 # fprint("width: {}, height: {}".format(index_width, index_height))
                 # fprint("Ogrid size: {}, {}".format(ogrid.nav_ogrid.info.height, ogrid.nav_ogrid.info.width))
-
                 to_add = ogrid.np_map[l_ogrid_start[1]:index_height, l_ogrid_start[0]:index_width]
-
                 # fprint("to_add shape: {}".format(to_add.shape))
 
                 # Make sure the slicing doesn't produce an error
                 end_x = start_x + to_add.shape[1]
                 end_y = start_y + to_add.shape[0]
-
                 try:
                     # fprint("np_grid shape: {}".format(np_grid[start_y:end_y, start_x:end_x].shape))
                     fprint("{}, {}".format(ogrid.topic, ogrid.replace))
@@ -333,37 +325,28 @@ class OGridServer:
         """
         if self.odom is None:
             return np_grid
-
         p, q = self.odom
-
         yaw_rot = trns.euler_from_quaternion(q)[2]  # rads
         boat_width = params.boat_length + params.boat_buffer + self.plow_factor  # m
         boat_height = params.boat_width + params.boat_buffer + self.plow_factor  # m
-
         x, y, _ = transform_enu_to_ogrid([p[0], p[1], 1], ogrid)
         theta = yaw_rot
         w = boat_width / ogrid.info.resolution
         h = boat_height / ogrid.info.resolution
-
         box = cv2.boxPoints(((x, y), (w, h), np.degrees(theta)))
         box = np.int0(box)
         cv2.drawContours(np_grid, [box], 0, 0, -1)
-
         # Draw a "boat" in the ogrid
         boat_width = params.boat_length + params.boat_buffer
         boat_height = params.boat_width + params.boat_buffer
-
         x, y, _ = transform_enu_to_ogrid([p[0], p[1], 1], ogrid)
         w = boat_width / ogrid.info.resolution
         h = boat_height / ogrid.info.resolution
-
         box = cv2.boxPoints(((x, y), (w, h), np.degrees(theta)))
         box = np.int0(box)
         cv2.drawContours(np_grid, [box], 0, 40, -1)
-
         # fprint("Plowed snow!")
         return np_grid
-
 
 if __name__ == '__main__':
     rospy.init_node('ogrid_server', anonymous=False)

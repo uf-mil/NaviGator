@@ -12,7 +12,6 @@ import cv2
 
 
 class Buoy(object):
-
     @classmethod
     def from_srv(cls, srv):
         return cls(mil_tools.rosmsg_to_numpy(srv.position), srv.color)
@@ -54,7 +53,6 @@ def two_buoys(navigator, buoys, setup_dist, channel_length=30):
     t = txros.tf.Transform.from_Pose_message(mil_tools.numpy_quat_pair_to_pose(*pose))
     t_mat44 = np.linalg.inv(t.as_matrix())
     f_bl_buoys = [t_mat44.dot(np.append(buoy.position, 1)) for buoy in front]
-
     # print f_bl_buoys
 
     # Angles are w.r.t positive x-axis. Positive is CCW around the z-axis.
@@ -102,10 +100,8 @@ def four_buoys(navigator, buoys, setup_dist):
 
     b_between_vector, _ = get_path(b_left_buoy, b_right_buoy)
     b_mid_point = b_left_buoy.position + b_between_vector / 2
-
     setup = navigator.move.set_position(f_mid_point).look_at(b_mid_point).backward(setup_dist)
     target = setup.set_position(b_mid_point).forward(setup_dist)
-
     ogrid = OgridFactory(f_left_buoy.position, f_right_buoy.position, target.position,
                          left_b_pos=b_left_buoy.position, right_b_pos=b_right_buoy.position)
 
@@ -132,29 +128,23 @@ def main(navigator):
     points.append(mil_tools.numpy_to_point(target.position))
     pc = PointCloud(header=mil_tools.make_header(frame='/enu'),
                     points=np.array(points))
-
     yield navigator._point_cloud_pub.publish(pc)
     print "Waiting 3 seconds to move..."
     yield navigator.nh.sleep(3)
     yield setup.go(move_type='skid')
-
     pose = yield navigator.tx_pose
     ogrid.generate_grid(pose)
-    # msg = ogrid.get_message()
+    msg = ogrid.get_message()
 
     print "publishing"
-    # latched = navigator.latching_publisher("/mission_ogrid", OccupancyGrid, msg)
+    navigator.latching_publisher("/mission_ogrid", OccupancyGrid, msg)
 
     print "START_GATE: Moving in 5 seconds!"
     yield target.go(initial_plan_time=5)
     return_with(result)
 
 
-# This really shouldn't be here - it should be somewhere behind the scenes
-
-
 class OgridFactory():
-
     def __init__(self, left_f_pos, right_f_pos, target, left_b_pos=None, right_b_pos=None, channel_length=30):
         # Front buoys
         self.left_f = left_f_pos
@@ -179,8 +169,8 @@ class OgridFactory():
         self.draw_lines(self.walls)
 
     def make_ogrid_transform(self):
-        self.origin = mil_tools.numpy_quat_pair_to_pose([self.x_lower, self.y_lower, 0],
-                                                        [0, 0, 0, 1])
+        self.origin = mil_tools.numpy_quat_pair_to_pose(
+            [self.x_lower, self.y_lower, 0], [0, 0, 0, 1])
         dx = self.x_upper - self.x_lower
         dy = self.y_upper - self.y_lower
         _max = max(dx, dy)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import txros
 from twisted.internet import defer
-# from sensor_msgs.msg import Joy  # We all need a little joy in our lives
+from sensor_msgs.msg import Joy  # We all need a little joy in our lives
 
 wait_for_completition = defer.Deferred()
 
@@ -17,7 +17,7 @@ def main(navigator):
     print "TELEOP: Switch back to autonomous on the controller (d-pad right or A) to resume autonomous operation."
     yield navigator.change_wrench("rc")
 
-    # rc_sub = navigator.nh.subscribe("/joy", Joy, watch_dog)
+    navigator.nh.subscribe("/joy", Joy, watch_dog)
 
     yield wait_for_completition
 
