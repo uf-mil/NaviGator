@@ -4,6 +4,7 @@ import unittest
 import itertools
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, CameraInfo, PointCloud2
+from mil_tools import rosmsg_to_numpy
 
 PKG = "navigator_gazebo"
 
@@ -55,14 +56,12 @@ class TestSimIntegration(unittest.TestCase):
         rospy.Subscriber("/velodyne_points", PointCloud2, self.points_cb)
 
     def odom_cb(self, msg):
-        pos = msg.pose.pose.position
-        ori = msg.pose.pose.orientation
-        self.odom_pos_msg = [pos.x, pos.y, pos.z]
-        self.odom_ori_msg = [ori.x, ori.y, ori.z, ori.w]
+        self.odom_pos_msg = rosmsg_to_numpy(msg.pose.pose.position)
+        self.odom_ori_msg = rosmsg_to_numpy(msg.pose.pose.orientation)
 
     def test_odom(self):
         timeout = rospy.Time.now() + rospy.Duration(1)
-        while ((self.odom_pos_msg == False or self.odom_ori_msg == False)
+        while ((len(self.odom_pos_msg) == 0 or len(self.odom_ori_msg) == 0)
                and rospy.Time.now() < timeout):
             rospy.sleep(0.01)
         self.assertTrue(len(self.odom_pos_msg) == 3 and len(self.odom_ori_msg) == 4)
@@ -83,8 +82,8 @@ class TestSimIntegration(unittest.TestCase):
 
     def test_absodom(self):
         timeout = rospy.Time.now() + rospy.Duration(1)
-        while ((self.absodom_pos_msg == False or self.absodom_ori_msg ==
-                False) and rospy.Time.now() < timeout):
+        while ((len(self.absodom_pos_msg) == 0 or len(self.absodom_ori_msg) ==
+                0) and rospy.Time.now() < timeout):
             rospy.sleep(0.01)
         self.assertTrue(len(self.absodom_pos_msg) == 3 and len(self.absodom_ori_msg) == 4)
         initial_pos = [743789.637462, -5503821.62581, 3125622.25266]
