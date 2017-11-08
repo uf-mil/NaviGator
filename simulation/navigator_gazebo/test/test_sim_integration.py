@@ -62,11 +62,11 @@ class TestSimIntegration(unittest.TestCase):
 
     def test_odom(self):
         timeout = rospy.Time.now() + rospy.Duration(1)
-        while ((len(self.odom_pos_msg) < 3 or len(self.odom_ori_msg) < 4)
-               and rospy.Time.now() < timeout):
+        while ((len(self.odom_pos_msg) < 3 or len(self.odom_ori_msg) < 4) and
+                rospy.Time.now() < timeout):
             rospy.sleep(0.1)
         self.assertTrue(len(self.odom_pos_msg) == 3 and len(self.odom_ori_msg) == 4,
-                msg="POS, ORI: {}, {}".format(len(self.odom_pos_msg), len(self.odom_ori_msg)))
+                        msg="POS, ORI: {}, {}".format(len(self.odom_pos_msg), len(self.odom_ori_msg)))
         initial_pos = [-1.2319, 0.0, 0.0]
         initial_ori = [0.0, 0.0, 0.0, 1.0]
         self.verify_pos_ori(
@@ -88,7 +88,7 @@ class TestSimIntegration(unittest.TestCase):
                 0) and rospy.Time.now() < timeout):
             rospy.sleep(0.1)
         self.assertTrue(len(self.absodom_pos_msg) == 3 and len(self.absodom_ori_msg) == 4,
-                msg="POS, ORI: {}, {}".format(len(self.absodom_pos_msg), len(self.absodom_ori_msg)))
+                        msg="POS, ORI: {}, {}".format(len(self.absodom_pos_msg), len(self.absodom_ori_msg)))
         initial_pos = [743789.637462, -5503821.36715, 3125622.10477]
         initial_ori = [0.0, 0.0, 0.0, 1.0]
         self.verify_pos_ori(
