@@ -92,6 +92,10 @@ class Navigator(BaseTask):
         cls._point_cloud_pub = cls.nh.advertise("navigator_points", PointCloud)
         cls._pose_pub = cls.nh.advertise("navigator_pose", PoseStamped)
 
+        # For missions to access clicked points / poses
+        cls.rviz_goal = cls.nh.subscribe("/move_base_simple/goal", PoseStamped)
+        cls.rviz_point = cls.nh.subscribe("/clicked_point", PointStamped)
+
         cls._moveto_client = action.ActionClient(cls.nh, 'move_to', MoveAction)
 
         def odom_set(odom):
