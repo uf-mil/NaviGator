@@ -25,7 +25,7 @@
 
     <node pkg="navigator_tools" type="boat_info.py" name="boat_info_markers" />
 
-    <include file="$(find navigator_launch)/launch/subsystems/object_classification.launch" />
+    <!-- include file="$(find navigator_launch)/launch/subsystems/object_classification.launch" / -->
 
     <!-- Run Path Planner -->
     <include file="$(find navigator_launch)/launch/subsystems/path_planner.launch" />

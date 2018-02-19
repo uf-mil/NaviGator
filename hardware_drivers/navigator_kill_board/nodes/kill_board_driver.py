@@ -108,6 +108,7 @@ class KillInterface(object):
         '''
         # If the controller message start byte is received, next 8 bytes are the controller data
         if msg == constants['CONTROLLER']:
+            rospy.loginfo('GOT CONTROLLER MESSAGE')
             self.ctrl_msg_count = 8
             self.ctrl_msg_timeout = rospy.Time.now()
             return
@@ -213,6 +214,7 @@ class KillInterface(object):
         Pings kill board on every network hearbeat message. Pretends to be the rf-based hearbeat because
         real one does not work :(
         '''
+        rospy.loginfo('PING')
         self.request(constants['PING']['REQUEST'], constants['PING']['RESPONSE'])
 
     def publish_diagnostics(self, err=None):

@@ -96,7 +96,28 @@ class StartGateAndy(Navigator):
         argmin = np.argmin(np.array(distances))
         self.send_feedback('Pinger is likely at gate {}'.format(argmin + 1))
 
-        gate = gates[argmin]
+        gate = gates[argmin][:2]
 
-        yield self.move.set_position(gate).go()
+        between_vector = (gates[0] - gates[-1])[:2]
+        # Rotate that vector to point through the buoys
+        #r = trns.euler_matrix(0, 0, np.radians(90))[:2, :2]
+        c = np.cos(np.radians(90))
+        s = np.sin(np.radians(90))
+        R = np.array([[c, -s],[s, c]])
+        direction_vector = R.dot(between_vector)
+        direction_vector /= np.linalg.norm(direction_vector)
+        position = self.pose[0][:2]
+        if np.linalg.norm(position - (gate + direction_vector)) > np.linalg.norm(position - (gate - direction_vector)):
+            direction_vector = -direction_vector
+
+        before_distance = 3.0
+        after_distance = 5.0
+        before = np.append(gate + direction_vector*before_distance, 0)
+        after = np.append(gate - direction_vector*after_distance, 0)
+
+        self.send_feedback('Moving in front of gate')
+        yield self.move.set_position(before).look_at(after).go()
+        self.send_feedback('Going through')
+        yield self.move.set_position(after).go()
+
         defer.returnValue('My god it actually worked!')

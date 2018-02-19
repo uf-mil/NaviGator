@@ -69,7 +69,6 @@ class BatteryMonitor():
         It appends the new readings to the end of the list and
         ensures that the list stays under 1000 entries.
         '''
-
         # Check if 3rd bit is raised
         if status.fault & 4 == 4 or self.hw_kill_raised is True:
             return
@@ -89,7 +88,6 @@ class BatteryMonitor():
             self.voltage = sum(self.supply_voltages) / \
                 len(self.supply_voltages)
             self.pub_voltage.publish(self.voltage)
-
 
 if __name__ == "__main__":
     monitor = BatteryMonitor()
