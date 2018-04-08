@@ -13,4 +13,3 @@ if __name__ == '__main__':
     classifer.save_csv(features, classes, filename=csv)
     classifer.train_from_csv(csv)
     print 'Score: ', classifer.score(features, classes)
-
