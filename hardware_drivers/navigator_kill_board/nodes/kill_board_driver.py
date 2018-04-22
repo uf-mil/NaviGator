@@ -148,11 +148,14 @@ class KillInterface(object):
         # If a response has been recieved to a requested status (button, remove, etc), update internal state
         if self.last_request is not None:
             if msg == constants['RESPONSE_FALSE']:
+                if self.board_status[self.last_request] == True:
+                    rospy.logdebug('SYNC FALSE for {}'.format(self.last_request))
                 self.board_status[self.last_request] = False
                 self.last_request = None
                 return
             if msg == constants['RESPONSE_TRUE']:
-                rospy.logdebug('RESPONSE TRUE for {}'.format(self.last_request))
+                if self.board_status[self.last_request] == False:
+                    rospy.logdebug('SYNC TRUE for {}'.format(self.last_request))
                 self.board_status[self.last_request] = True
                 self.last_request = None
                 return
@@ -301,6 +304,6 @@ class KillInterface(object):
 
 
 if __name__ == '__main__':
-    rospy.init_node("kill_board_driver")
+    rospy.init_node("kill_board_driver", log_level=rospy.DEBUG)
     driver = KillInterface()
     driver.run()

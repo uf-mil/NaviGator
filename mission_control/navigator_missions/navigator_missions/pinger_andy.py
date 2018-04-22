@@ -14,7 +14,7 @@ class PingerAndy(Navigator):
     Mission to run sonar start gate challenge using Andy's sonar system, which produces a vector pointing towards the
     '''
     MAX_TOTEM_DISTANCE = 30.0  # Maximum distance one of the totems surrounding the gates can be
-    SAMPLES = 2               # Number of headings to use in selecting gate
+    SAMPLES = 10               # Number of headings to use in selecting gate
     MIN_SAMPLES = 1            # Minimium # of headings to get within timout to attempt mission
     HEADINGS_TIMEOUT = 45      # Timeout in seconds to stop collecting headings even if SAMPLES count is not reached
     TF_TIMEOUT = 1.0           # Max time to wait to transform hydrophones frame to enu
@@ -57,11 +57,10 @@ class PingerAndy(Navigator):
         totems = []
         for i in range(4):
             query = 'pinger_totem{}'.format(i + 1)
-            totems = yield self.database_query(query)
-            if not totems.found:
+            res = yield self.database_query(query)
+            if not res.found:
                 raise TaskException(query + ' not found in object database')
-            point = rosmsg_to_numpy(totems.objects[0].pose.position)[:2]
-            point[2] = 0.0
+            point = rosmsg_to_numpy(res.objects[0].pose.position)[:2]
             totems.append(np.array(point))
 
         # Create list of gates halfway between each pair of totems
@@ -79,7 +78,7 @@ class PingerAndy(Navigator):
             heading = yield self.pinger_heading.get_next_message()
             self.frame = heading.header.frame_id
             self.send_feedback('Heading sample {}/{} recieved'.format(i + 1, self.SAMPLES))
-            stamp = heading.header.stamp if not heading.header.stamp.is_zero() else None
+            stamp = None #heading.header.stamp if not heading.header.stamp.is_zero() else None
             hydrophones_to_enu = yield util.wrap_timeout(self.tf_listener.get_transform('enu', heading.header.frame_id, time=stamp), self.TF_TIMEOUT).addErrback(lambda _: None)
             if hydrophones_to_enu is None:
                 self.send_feedback('Transform failed, continuing...')
