@@ -5,12 +5,23 @@ from navigator import Navigator
 import numpy as np
 from mil_tools import rosmsg_to_numpy
 from geometry_msgs.msg import Vector3Stamped
+from mil_tasks_core import TaskException
+from scipy.stats import mode
 
 
 class PingerAndy(Navigator):
     '''
     Mission to run sonar start gate challenge using Andy's sonar system, which produces a vector pointing towards the
     '''
+    MAX_TOTEM_DISTANCE = 30.0  # Maximum distance one of the totems surrounding the gates can be
+    SAMPLES = 10               # Number of headings to use in selecting gate
+    MIN_SAMPLES = 1            # Minimium # of headings to get within timout to attempt mission
+    HEADINGS_TIMEOUT = 45      # Timeout in seconds to stop collecting headings even if SAMPLES count is not reached
+    TF_TIMEOUT = 1.0           # Max time to wait to transform hydrophones frame to enu
+    BEFORE_DISTANCE = 3.0     # Distance infront of gate for first move, meters
+    AFTER_DISTANCE = 6.0      # Distance passed gate for second move, meters
+    TRUST_STAMP = False
+
     @classmethod
     def init(cls):
         cls.pinger_heading = cls.nh.subscribe("/hydrophones/ping_direction", Vector3Stamped)
@@ -46,18 +57,13 @@ class PingerAndy(Navigator):
     def get_gates(self):
         totems = []
         for i in range(4):
-            while True:
-                self.send_feedback('Click on totem {} in rviz'.format(i + 1))
-                point = yield self.rviz_point.get_next_message()
-                if point.header.frame_id != 'enu':
-                    self.send_feedback('Point is not in ENU.\
-                         Please switch rviz frame to ENU or tell kevin to support other frames.')
-                    continue
-                break
-            self.send_feedback('Recieved point for totem {}'.format(i + 1))
-            point = rosmsg_to_numpy(point.point)
-            point[2] = 0.0
+            query = 'pinger_totem{}'.format(i + 1)
+            res = yield self.database_query(query)
+            if not res.found:
+                raise TaskException(query + ' not found in object database')
+            point = rosmsg_to_numpy(res.objects[0].pose.position)[:2]
             totems.append(np.array(point))
+
         # Create list of gates halfway between each pair of totems
         gates = []
         for i in range(3):
@@ -65,40 +71,55 @@ class PingerAndy(Navigator):
         defer.returnValue(gates)
 
     @util.cancellableInlineCallbacks
+    def get_pinger_gate(self, gates):
+        answers = []
+        gates_line = self.line(gates[0], gates[-1])
+        i = 0
+        while i < self.SAMPLES:
+            heading = yield self.pinger_heading.get_next_message()
+            self.frame = heading.header.frame_id
+            self.send_feedback('Heading sample {}/{} recieved'.format(i + 1, self.SAMPLES))
+            stamp = heading.header.stamp if (self.TRUST_STAMP and not heading.header.stamp.is_zero()) else None
+            hydrophones_to_enu = yield util.wrap_timeout(
+                self.tf_listener.get_transform('enu', heading.header.frame_id, time=stamp), self.TF_TIMEOUT)\
+                .addErrback(lambda _: None)
+            if hydrophones_to_enu is None:
+                self.send_feedback('Transform failed, continuing...')
+                continue
+            hydrophones_origin = hydrophones_to_enu._p[0:2]
+            heading = rosmsg_to_numpy(heading.vector)
+            heading_enu = hydrophones_to_enu.transform_vector(heading)
+            heading_enu = heading_enu[0:2] / np.linalg.norm(heading_enu[0:2])
+            pinger_line = self.line(hydrophones_origin, hydrophones_origin + heading_enu)
+
+            # Find intersection of these two lines. This is the approximate position of the pinger
+            intersection = self.intersection(pinger_line, gates_line)
+            if intersection is None:
+                self.send_feedback('Sample is insane! Ignoring.')
+                continue
+            distances = []
+            for gate in gates:
+                distances.append(np.linalg.norm(gate[0:2] - intersection))
+            argmin = np.argmin(np.array(distances))
+            answers.append(argmin)
+            i += 1
+            self.send_feedback('Current heading points to gate {}'.format(argmin + 1))
+        if len(answers) < self.MIN_SAMPLES:
+            raise TaskException('not enough headings', {'headings': len(answers), 'timeout': self.HEADINGS_TIMEOUT})
+        answers = np.array(answers)  # Everything's better as a numpy array
+        gate_mode = mode(answers)[0][0]
+        self.send_feedback('Best gate is gate {} based on mode of {} samples'.format(gate_mode + 1, len(answers)))
+        defer.returnValue(gate_mode)
+
+    @util.cancellableInlineCallbacks
     def run(self, args):
         # Get position of 3 gates based on position of totems
         gates = yield self.get_gates()
+        self.send_feedback('Getting hydrophone samples')
+        pinger_gate_index = yield self.get_pinger_gate(gates)
+        pinger_gate = gates[pinger_gate_index]
 
-        # Get heading towards pinger from Andy hydrophone system
-        self.send_feedback('All gates clicked on! Waiting for pinger heading...')
-        heading = yield self.pinger_heading.get_next_message()
-        self.send_feedback('Recieved pinger heading')
-
-        # Convert heading and hydophones from to enu
-        hydrophones_to_enu = yield self.tf_listener.get_transform('enu', heading.header.frame_id)
-        hydrophones_origin = hydrophones_to_enu._p[0:2]
-        heading = rosmsg_to_numpy(heading.vector)
-        heading_enu = hydrophones_to_enu.transform_vector(heading)
-        heading_enu = heading_enu[0:2] / np.linalg.norm(heading_enu[0:2])
-
-        pinger_line = self.line(hydrophones_origin, hydrophones_origin + heading_enu)
-        gates_line = self.line(gates[0], gates[-1])
-
-        # Find intersection of these two lines. This is the approximate position of the pinger
-        intersection = self.intersection(pinger_line, gates_line)
-        if intersection is None:
-            raise Exception('No intersection')
-        self.send_feedback('Pinger is roughly at {}'.format(intersection))
-
-        distances = []
-        for gate in gates:
-            distances.append(np.linalg.norm(gate[0:2] - intersection))
-        argmin = np.argmin(np.array(distances))
-        self.send_feedback('Pinger is likely at gate {}'.format(argmin + 1))
-
-        gate = gates[argmin][:2]
-
-        between_vector = (gates[0] - gates[-1])[:2]
+        between_vector = gates[0] - gates[-1]
         # Rotate that vector to point through the buoys
         c = np.cos(np.radians(90))
         s = np.sin(np.radians(90))
@@ -106,13 +127,12 @@ class PingerAndy(Navigator):
         direction_vector = R.dot(between_vector)
         direction_vector /= np.linalg.norm(direction_vector)
         position = self.pose[0][:2]
-        if np.linalg.norm(position - (gate + direction_vector)) > np.linalg.norm(position - (gate - direction_vector)):
+        if np.linalg.norm(position - (pinger_gate + direction_vector)) >\
+           np.linalg.norm(position - (pinger_gate - direction_vector)):
             direction_vector = -direction_vector
 
-        before_distance = 3.0
-        after_distance = 5.0
-        before = np.append(gate + direction_vector * before_distance, 0)
-        after = np.append(gate - direction_vector * after_distance, 0)
+        before = np.append(pinger_gate + direction_vector * self.BEFORE_DISTANCE, 0)
+        after = np.append(pinger_gate - direction_vector * self.AFTER_DISTANCE, 0)
 
         self.send_feedback('Moving in front of gate')
         yield self.move.set_position(before).look_at(after).go()
