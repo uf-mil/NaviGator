@@ -1,0 +1,29 @@
+item {
+  id: 1
+  name: 'Buoy'
+}
+
+item {
+  id: 2
+  name: 'Green Totem'
+}
+
+item {
+  id: 3
+  name: 'Red Totem'
+}
+
+item {
+  id: 4
+  name: 'White Totem'
+}
+
+item {
+  id: 5
+  name: 'Yellow Totem'
+}
+
+item {
+  id: 6
+  name: 'Blue Totem'
+}
