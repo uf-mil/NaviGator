@@ -2,19 +2,19 @@
 datasets:
     - name: navigator_stc_seecam
       sources:
-        - file: stc.bag                       # bag file name. Will be resolved relative to bag dir set in yaml of cli argument
+        - file: 2018-02-18/stc.bag                       # bag file name. Will be resolved relative to bag dir set in yaml of cli argument
           topic: /camera/seecam/image_raw     # Topic in bag to extract images from
           encoding: rect_color                # How to process image if needed, can be mono, rect, color, or rect_color
           freq: 0.5                           # Number of images to extract per second of bag time
-        - file: stc_closer.bag
+        - file: 2018-02-04/stc_closer.bag
           topic: /camera/seecam/image_raw
           encoding: rect_color
           freq: 0.5
-        - file: scanthecode.bag
+        - file: 2018-02-04/scanthecode.bag
           topic: /camera/seecam/image_raw
           encoding: rect_color
           freq: 0.05
-        - file: stc2.bag
+        - file: 2018-02-18/stc2.bag
           topic: /camera/seecam/image_raw
           encoding: rect_color
           freq: 0.5
