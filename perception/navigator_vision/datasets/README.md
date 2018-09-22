@@ -3,7 +3,7 @@ This directory contains the configuration used to create the unified [`navigator
 
 ## Contents
 
-### project_labels.json
+### project_labels.csv
 The latest exported labels from the labelbox.io project. 
 
 ### project_config.json
