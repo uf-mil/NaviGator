@@ -1,0 +1,8 @@
+<launch>
+    <test test-name="robotx_comms_test" pkg="navigator_robotx_comms" type="robotx_comms_test.py" />
+</launch>
+
+	<test test-name="set_localhost_params" pkg="navigator_robotx_comms" type="set_localhost_params.py" />
+</launch>
+
+  <node name="navigator_robotx_comms" pkg="navigator_robotx_comms" type="navigator_robotx_comms.py" />
