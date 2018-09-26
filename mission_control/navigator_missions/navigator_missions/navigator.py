@@ -19,6 +19,7 @@ from topic_tools.srv import MuxSelect, MuxSelectRequest
 from mil_misc_tools.text_effects import fprint
 from navigator_tools import MissingPerceptionObject
 from mil_tasks_core import BaseTask
+from mil_pneumatic_actuator.srv import SetValve, SetValveRequest
 
 
 class MissionResult(object):
@@ -56,6 +57,8 @@ class Navigator(BaseTask):
     red = "RED"
     green = "GREEN"
     blue = "BLUE"
+    DEPLOY_WAIT_TIME = 10.0
+    RETRACT_WAIT_TIME = 10.0
 
     def __init__(self, **kwargs):
         super(Navigator, self).__init__(**kwargs)
@@ -99,6 +102,7 @@ class Navigator(BaseTask):
         cls._ecef_odom_sub = cls.nh.subscribe('absodom', Odometry, enu_odom_set)
 
         try:
+            cls._actuator_client = cls.nh.get_service_client('/actuator_driver/actuate', SetValve)
             cls._database_query = cls.nh.get_service_client('/database/requests', navigator_srvs.ObjectDBQuery)
             cls._camera_database_query = cls.nh.get_service_client(
                 '/camera_database/requests', navigator_srvs.CameraDBQuery)
@@ -165,6 +169,39 @@ class Navigator(BaseTask):
         else:
             fprint("No bounds param found, defaulting to none.", title="NAVIGATOR")
             cls.enu_bounds = None
+
+    @util.cancellableInlineCallbacks
+    def deploy_thruster(self, name):
+        extend = name + '_extend'
+        retract = name + '_retract'
+        unlock = name + '_unlock'
+        yield self.set_valve(retract, True)
+        yield self.set_valve(unlock, True)
+        yield self.set_valve(retract, False)
+        yield self.set_valve(extend, True)
+        yield self.nh.sleep(self.DEPLOY_WAIT_TIME)
+        yield self.set_valve(unlock, False)
+        yield self.set_valve(extend, False)
+
+    @util.cancellableInlineCallbacks
+    def retract_thruster(self, name):
+        retract = name + '_retract'
+        unlock = name + '_unlock'
+        yield self.set_valve(unlock, True)
+        yield self.set_valve(retract, True)
+        yield self.nh.sleep(self.RETRACT_WAIT_TIME)
+        yield self.set_valve(unlock, False)
+        yield self.set_valve(retract, False)
+
+    def deploy_thrusters(self):
+        return defer.DeferredList([self.deploy_thruster(name) for name in ['FL', 'FR', 'BL', 'BR']])
+
+    def retract_thrusters(self):
+        return defer.DeferredList([self.retract_thruster(name) for name in ['FL', 'FR', 'BL', 'BR']])
+
+    def set_valve(self, name, state):
+        req = SetValveRequest(actuator=name, opened=state)
+        return self._actuator_client(req)
 
     @util.cancellableInlineCallbacks
     def database_query(self, object_name=None, raise_exception=True, **kwargs):

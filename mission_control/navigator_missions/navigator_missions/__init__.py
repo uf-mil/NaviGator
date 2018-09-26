@@ -20,4 +20,6 @@ from station_hold import StationHold
 from killed import Killed
 from move import Move
 from constant_velocity import ConstantVelocity
+from deploy_thrusters import DeployThrusters
+from retract_thrusters import RetractThrusters
 import pose_editor
