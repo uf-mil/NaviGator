@@ -1,0 +1,154 @@
+#!/usr/bin/env python
+
+# Author:                Paul Chojecki
+# Version:               1.0
+# pull request date :    10/4/2018
+
+# Description:
+"""
+This program was written for the purpose of detecting square targets. Although the program is intended to detect square targets, it works by detecting any shape having four straight edges. The program displays the detected target by displaying the area, number of sides, and the name of the shape. The overall execution of the program is as follows:
+
+	* The program converts the input image to gray scale	
+	* The program blurs the resulting image
+	* The program applies a threshold on the resulting image
+	* The program applies a Laplace filter on the resulting image
+	* The program dilates any white spaces
+	* The program identifies all contours
+
+For all contrours the program:
+	
+	* calculates the centroid of the shape
+	* calculates the area of the shape
+
+For all contrours having an area above a certain threshold the program:
+
+	* calculates/diplays the shape name/contour
+	* calculates/displays the number of sides
+	* calculates/displays the area
+
+"""
+
+from __future__ import print_function
+
+import roslib
+roslib.load_manifest('beginner_tutorials')
+import sys
+import rospy
+import cv2
+import imutils
+import numpy
+from std_msgs.msg import String
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+
+## This variable is used to distinguish potential noise and actual targets
+## It is set arbitrarily by testing different values on different video bag files and seeing which value yields the best results
+## If the value is set too high then the targets will not be detected
+## If the value is set too low then this could introduce potential noise in the final image
+## The higher the value the closer the field of vision has to be to the target
+AREA_THRESHOLD = 5000
+
+class image_converter:
+
+	def __init__(self):
+		self.image_pub = rospy.Publisher("image_topic_2",Image, queue_size = 10)
+		self.bridge = CvBridge()
+		self.image_sub = rospy.Subscriber("image_topic",Image,self.callback)
+ 
+	def callback(self,data):
+		try:
+			cv_image_original = self.bridge.imgmsg_to_cv2(data, "bgr8")
+		except CvBridgeError as e:			
+			print(e)
+ 
+		## convert input image (cv_image_original) to gray scale
+		cv_image = cv2.cvtColor(cv_image_original, cv2.COLOR_BGR2GRAY)
+
+		## blur resulting image
+		## numerical values were chosen arbitrarily after trial and error on sample bag video files
+		cv_image = cv2.GaussianBlur(cv_image, (29,29), 0)
+
+		## apply threshold on resulting image
+		## numerical values were chosen arbitrarily after tiral and error on sample bag video files
+		cv_image = cv2.adaptiveThreshold(cv_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 13, 2)
+
+		## apply Laplace filter on resulting image
+		cv_image = cv2.Laplacian(cv_image, cv2.CV_8UC1)
+
+		## dilate resulting image (i.e. thicken the lines)
+		## numerical values were chosen arbitrarily after tiral and error on sample bag video files
+		kernel = numpy.ones((2, 2), numpy.uint8)
+		cv_image = cv2.dilate(cv_image, kernel, iterations = 3)
+		
+		## create a list of contours stored in variable "cnts"
+		cnts = cv2.findContours(cv_image.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+		cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+
+		"""
+		the following for loop cycles through all the contours in "cnts" and finds:
+			* centroid (cX, cY)
+			* area delimited by the contour (area/area_str)
+			* length of the contour (perimeter)
+			* number of sides (sides/sides_str)
+
+		If the contour has 4 straigh-edge sides and exeeds the area exceeds a certain threshold (AREA_THRESHOLD) the program prints 			the following data near the centroid of shape in the video:
+			* area (area_str)
+			* shape (shape)
+			* number of sides of the shape (sides_str)
+		"""
+		for num, c in enumerate(cnts, start = 1):
+			index = num
+			M = cv2.moments(c)
+		
+			## Calculate the centroid
+			if M["m00"] != 0:
+				cX = int(M["m10"]/M["m00"])
+				cY = int(M["m01"]/M["m00"])
+			else:
+				cX, cY = 0,0
+			
+			"""If the area is greater than some threshold (AREA_THRESHOLD) then calculate the following:
+				* length of the contour of the shape (perimeter)
+				* number of sides of the shape (sides/sides_str)
+				* area of the shape (area_str)
+			""" 
+			area = cv2.contourArea(c)
+			if area > AREA_THRESHOLD:
+				perimeter = cv2.arcLength(c, True)
+				sides = cv2.approxPolyDP(c, .04*perimeter, True)
+				sides_str = str(len(sides))
+				area_str = str(cv2.contourArea(c))
+
+				""" If the number of sides of the shape is 4 then display the following:
+					* area of the shape (area_str)
+					* name of the shape (shape)
+					* number of sides
+					* the contour of the shape
+				"""
+				if len(sides) == 4:
+					shape = "rect/sqr"
+					cv2.putText(cv_image_original, area_str, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
+					cv2.putText(cv_image_original, shape, (cX, cY-30), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
+					cv2.putText(cv_image_original, sides_str, (cX, cY-60), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
+					cv2.drawContours(cv_image_original, cnts, num-1, (0, 255, 0), 2)
+		
+		test = cv2.resize(cv_image_original, (900, 600))
+		cv2.imshow("Image window", test)
+		cv2.waitKey(50)
+ 
+		try:
+			self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+		except CvBridgeError as e:
+			print(e)
+
+def main(args):
+	ic = image_converter()
+	rospy.init_node('image_converter', anonymous=True)
+	try:
+		rospy.spin()
+	except KeyboardInterrupt:
+		print("Shutting down")
+	cv2.destroyAllWindows()
+ 
+if __name__ == '__main__':
+	main(sys.argv)
