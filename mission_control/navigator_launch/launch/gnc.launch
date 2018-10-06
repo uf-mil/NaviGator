@@ -1,5 +1,6 @@
 <launch>
     <arg name="gps" default="True" />
+    <arg name="simulation" default="False" />
     <include file="$(find navigator_launch)/launch/gnc/thruster_mapper.launch"/>
     <include file="$(find navigator_launch)/launch/gnc/tf.launch"/>
 
@@ -30,7 +31,9 @@
 
     <node pkg="navigator_tools" type="boat_info.py" name="boat_info_markers" />
 
-    <include file="$(find navigator_launch)/launch/perception/pcodar.launch" />
+<!--
+    <include if="$(arg simulation)" file="$(find navigator_launch)/launch/perception/pcodar.launch" />
+-->
 
     <!-- Run Path Planner -->
     <include file="$(find navigator_launch)/launch/gnc/path_planner.launch" />
