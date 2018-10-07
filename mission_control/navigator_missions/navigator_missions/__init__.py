@@ -8,6 +8,7 @@ del mil_tasks_core
 from detect_deliver import DetectDeliver
 from teleop import Teleop
 from circle import Circle
+from circle_totem_simple import CircleTotemSimple
 from back_and_forth import BackAndForth
 from start_gate import StartGate
 from coral_survey import CoralSurvey
@@ -20,6 +21,4 @@ from station_hold import StationHold
 from killed import Killed
 from move import Move
 from constant_velocity import ConstantVelocity
-from deploy_thrusters import DeployThrusters
-from retract_thrusters import RetractThrusters
 import pose_editor

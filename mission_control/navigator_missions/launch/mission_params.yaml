@@ -19,7 +19,7 @@ totem_direction_1:
     if False, no more totems should be circled
 totem_color_1:
   param: /mission/totems/color_1
-  options: [RED,GREEN,YELLOW,BLUE]
+  options: [RED,GREEN,YELLOW,BLUE,WHITE]
   description: What color totem the Find Totems and Avoid Obstacles mission should circle first
 
 totem_direction_2:
@@ -30,7 +30,7 @@ totem_direction_2:
     if False, no more totems should be circled
 totem_color_2:
   param: /mission/totems/color_2
-  options: [RED,GREEN,YELLOW,BLUE]
+  options: [RED,GREEN,YELLOW,BLUE,WHITE]
   description: What color totem the Find Totems and Avoid Obstacles mission should circle second
 
 totem_direction_3:
@@ -41,7 +41,7 @@ totem_direction_3:
     if False, no more totems should be circled
 totem_color_3:
   param: /mission/totems/color_3
-  options: [RED,GREEN,YELLOW,BLUE]
+  options: [RED,GREEN,YELLOW,BLUE,WHITE]
   description: What color totem the Find Totems and Avoid Obstacles mission should circle third
 
 totem_direction_4:

@@ -5,7 +5,7 @@
           # ONLY BL has been verfied on navigator, others are not currently connected
           BL_unlock: 1
           BL_extend: 3
-          BL_retract: 4
+          BL_retract: 2
 
           # TODO: fix once it is all plugged in
           FL_unlock: 5
