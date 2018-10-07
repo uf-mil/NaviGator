@@ -64,11 +64,11 @@ class Navigator(BaseTask):
     # Time to wait for thruster to lower when deploying thruster
     DEPLOY_WAIT_TIME = 3.0
     # Time to enable retract piston before unlocking when deploying a thruster
-    DEPLOY_LOOSEN_TIME = 0.25
+    DEPLOY_LOOSEN_TIME = 1.0
     # Time to wait for lock to engage when retracting thruster
     RETRACT_LOCK_TIME = 0.5
     # Time to wait thruster to lift before engaging lock
-    RETRACT_WAIT_TIME = 10.0
+    RETRACT_WAIT_TIME = 3.0
 
     def __init__(self, **kwargs):
         super(Navigator, self).__init__(**kwargs)
@@ -218,6 +218,22 @@ class Navigator(BaseTask):
         '''
 
         return defer.DeferredList([self.retract_thruster(name) for name in ['FL', 'FR', 'BL', 'BR']])
+
+    def extend_launcher_reload(self):
+        return self.set_valve('LAUNCH_RELOAD', True)
+
+    def retract_launcher_reload(self):
+        return self.set_valve('LAUNCH_RELOAD', False)
+
+    @util.cancellableInlineCallbacks
+    def reload_launcher(self):
+        yield self.extend_launcher_reload()
+        yield self.nh.sleep(5.0)
+        yield self.retract_launcher_reload()
+        yield self.nh.sleep(5.0)
+
+    def fire_launcher(self):
+        return self.set_valve('LAUNCHER_FIRE', True)
 
     def set_valve(self, name, state):
         req = SetValveRequest(actuator=name, opened=state)

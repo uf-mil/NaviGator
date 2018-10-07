@@ -35,6 +35,7 @@ class Joystick(object):
         self.last_emergency_control = False
         self.last_keyboard_control = False
         self.last_auto_control = False
+        self.last_back = False
         self.thruster_deploy_count = 0
         self.thruster_retract_count = 0
 
