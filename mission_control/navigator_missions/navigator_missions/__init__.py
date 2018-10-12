@@ -21,3 +21,4 @@ from killed import Killed
 from move import Move
 from constant_velocity import ConstantVelocity
 import pose_editor
+from start_gate_jaxon import StartGateJaxon
