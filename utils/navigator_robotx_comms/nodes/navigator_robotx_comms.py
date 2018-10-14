@@ -341,7 +341,7 @@ def send_message(message):
             connected = False
             # recreate socket
             socketConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            while not connected:
+            while not connected and not rospy.is_shutdown():
                 # attempt to reconnect, otherwise sleep for 2 seconds
                 try:
                     socketConnection.connect((TCP_IP, TCP_PORT))
@@ -382,7 +382,7 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         if not connected:
             print('Attempting Connection to TD Server')
-        while not connected:
+        while not connected and not rospy.is_shutdown()::
             connected = False
             # recreate socket
             socketConnection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
