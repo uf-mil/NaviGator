@@ -1,0 +1,6 @@
+int8 entrance_gate
+int8 exit_gate
+bool light_buoy_active
+string light_pattern
+---
+string message
