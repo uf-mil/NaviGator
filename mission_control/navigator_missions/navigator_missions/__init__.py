@@ -26,3 +26,5 @@ from retract_thrusters import RetractThrusters
 from fire_launcher import FireLauncher
 from reload_launcher import ReloadLauncher
 import pose_editor
+from start_gate_marshall import StartGateMarshall
+from start_gate_jaxon import StartGateJaxon
