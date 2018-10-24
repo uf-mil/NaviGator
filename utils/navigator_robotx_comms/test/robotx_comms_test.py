@@ -24,6 +24,18 @@ def test_service():
 
 if __name__ == "__main__":
 
+    msg_delimiter = ','
+
+    TCP_IP = rospy.get_param('td_ip')
+    TCP_PORT = rospy.get_param('td_port')
+    # TCP_IP = '192.168.37.234'
+    # TCP_PORT = 1337
+    BUFFER_SIZE = 1024
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((TCP_IP, TCP_PORT))
+    server.listen(5)
+
     rospy.wait_for_service('entrance_exit_gate_message')
     rospy.wait_for_service('scan_code_message')
     rospy.wait_for_service('identify_symbols_dock_message')
@@ -37,21 +49,8 @@ if __name__ == "__main__":
     send_robot_x_detect_deliver_message = rospy.ServiceProxy('detect_deliver_message',
                                                              MessageDetectDeliver)
 
-    msg_delimiter = ','
-
-    TCP_IP = rospy.get_param('td_ip')
-    TCP_PORT = rospy.get_param('td_port')
-    # TCP_IP = '192.168.37.234'
-    # TCP_PORT = 1337
-    BUFFER_SIZE = 1024
-
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((TCP_IP, TCP_PORT))
-    server.listen(5)
-
     conn, addr = server.accept()
     print 'Connection address: ', addr
-
 
     def signal_handler(sig, frame):
         print 'You pressed Ctrl+C!'

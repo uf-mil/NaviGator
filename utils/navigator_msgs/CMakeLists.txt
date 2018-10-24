@@ -51,7 +51,6 @@ add_service_files(
   GetDockBays.srv
   MessageDetectDeliver.srv
   MessageExtranceExitGate.srv
-  MessageHeartbeat.srv
   MessageIdentifySymbolsDock.srv
   MessageScanCode.srv
 )

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """
-RobotX Communications: A node that handles communications
-with the RobotX Technical Director network.
+RobotX Communications: A node that implements the RobotX Communication Protocol
+Responsible for forming and sending messages to the Technical Director server
 """
 
 import datetime
@@ -24,48 +24,32 @@ lock = threading.Lock()
 rospy.init_node("robotx_comms")
 
 
-class RobotXHeartbeatMessage():
+class RobotXHeartbeatMessage:
     """
-    Handles formation and sending of heartbeat message.
+    Handles formation of heartbeat message
     """
 
     def __init__(self):
-
-        self.team_id = rospy.get_param('team_id')
         self.message_id = "RXHRB"
-        self.gps_array = None
-        self.odom = None
-        self.auv_status = 1
-        self.system_mode = 2
-
-        rospy.Subscriber("lla", PointStamped, self.gps_coord_callback)
-        rospy.Subscriber("odom", Odometry, self.gps_odom_callback)
-        # rospy.Subscriber("auv_status", String, self.auv_status_callback)
-
-        # Do Class that subscribes to all stuff
-        #
 
     def from_string(self, string):
-
         # TODO: Implement testing method for heartbeat message
         pass
 
-    def to_string(self, delim, team_id, hst_date_time):
-
-        if self.gps_array is not None:
-            latitude = self.gps_array.point.x
-            longitude = self.gps_array.point.y
+    def to_string(self, delim, team_id, hst_date_time, gps_array, odom, auv_status, system_mode):
+        if gps_array is not None:
+            latitude = gps_array.point.x
+            longitude = gps_array.point.y
         else:
             latitude = ""
             longitude = ""
 
-        if self.odom is not None:
-            quaternion = self.odom.pose.pose.orientation
+        if odom is not None:
+            quaternion = odom.pose.pose.orientation
             quaternion_numpy = rosmsg_to_numpy(quaternion)
             euler_angles = trans.euler_from_quaternion(quaternion_numpy)
             north_south = ""
             east_west = ""
-
             if 0 < euler_angles[2] < math.pi / 2:
                 north_south = "N"
                 east_west = "E"
@@ -78,12 +62,15 @@ class RobotXHeartbeatMessage():
             elif 0 > euler_angles[2] > -math.pi / 2:
                 north_south = "S"
                 east_west = "E"
-
-        # TODO: EULER ANGLES pi to -pi, in radians, get degrees, fix orientiation.
-
         else:
             east_west = ""
             north_south = ""
+
+        if auv_status is None:
+            auv_status = 0
+
+        if system_mode is None:
+            system_mode = 0
 
         first_half_data = "{0}{1}{2}{3}{4}{5}{6}".format(self.message_id,
                                                          delim,
@@ -98,8 +85,8 @@ class RobotXHeartbeatMessage():
                                                                 east_west,
                                                                 delim,
                                                                 team_id,
-                                                                delim, str(self.system_mode), delim,
-                                                                str(self.auv_status))
+                                                                delim, str(system_mode), delim,
+                                                                str(auv_status))
 
         full_data = first_half_data + delim + second_half_data
 
@@ -114,41 +101,26 @@ class RobotXHeartbeatMessage():
 
         msg_return = "${0}*{1}\r\n".format(full_data, str(checksum).zfill(2))
 
-        return MessageHeartbeatResponse(msg_return)
-
-    def auv_status_callback(self, auv_status):
-
-        self.auv_status = auv_status
-
-    def gps_coord_callback(self, lla):
-
-        self.gps_array = lla
-
-    def gps_odom_callback(self, odom):
-
-        self.odom = odom
+        return msg_return
 
 
-class RobotXEntranceExitGateMessage():
+class RobotXEntranceExitGateMessage:
     """
-    Handles formation and sending of entrance and exit gates message
+    Handles formation of entrance and exit gates message
     """
 
     def __init__(self):
-
         self.message_id = "RXGAT"
 
     def from_string(self, string):
-
         # TODO: Implement testing method for entrance and exit gates message
         pass
 
     def to_string(self, delim, team_id, hst_date_time, data):
-
-        light_buoy_active_letter = "N"
-
         if data.light_buoy_active:
             light_buoy_active_letter = "Y"
+        else:
+            light_buoy_active_letter = "N"
 
         data = "{0}{1}{2}{3}{4}{5}{6}{7}{8}{9}{10}{11}{12}".format(self.message_id,
                                                                    delim,
@@ -178,7 +150,7 @@ class RobotXEntranceExitGateMessage():
         return MessageExtranceExitGateResponse(msg_return)
 
 
-class RobotXScanCodeMessage():
+class RobotXScanCodeMessage:
     """
     Handles formation and sending of scan the code message
     """
@@ -213,9 +185,9 @@ class RobotXScanCodeMessage():
         return MessageScanCodeResponse(msg_return)
 
 
-class RobotXIdentifySymbolsDockMessage():
+class RobotXIdentifySymbolsDockMessage:
     """
-    Handles formation and sending of identify symbols and dock message
+    Handles formation of identify symbols and dock message
     """
 
     def __init__(self):
@@ -250,9 +222,9 @@ class RobotXIdentifySymbolsDockMessage():
         return MessageIdentifySymbolsDockResponse(msg_return)
 
 
-class RobotXDetectDeliverMessage():
+class RobotXDetectDeliverMessage:
     """
-    Handles formation and sending of detect and deliver message
+    Handles formation of detect and deliver message
     """
 
     def __init__(self):
@@ -287,9 +259,17 @@ class RobotXDetectDeliverMessage():
         return MessageDetectDeliverResponse(msg_return)
 
 
-class RobotXStartServices():
+class RobotXStartServices:
+    """
+    Initializes services and subscribes to necessary publishers
+    """
 
     def __init__(self):
+        # define all variables for subscribers
+        self.gps_array = None
+        self.odom = None
+        self.auv_status = 1  # TODO: Change to None after auv_status publisher becomes a thing
+        self.system_mode = 2  # TODO: Change to None after system_mode publisher becomes a thing
         # define delimiter for messages
         self.delim = ','
         # define team id for messages
@@ -304,6 +284,12 @@ class RobotXStartServices():
         self.robot_x_scan_code_message = RobotXScanCodeMessage()
         self.robot_x_identify_symbols_dock_message = RobotXIdentifySymbolsDockMessage()
         self.robot_x_detect_deliver_message = RobotXDetectDeliverMessage()
+
+        # setup all subscribers
+        rospy.Subscriber("lla", PointStamped, self.gps_coord_callback)
+        rospy.Subscriber("odom", Odometry, self.gps_odom_callback)
+        # rospy.Subscriber("auv_status", String, self.auv_status_callback)  # TODO: Uncomment when auv_status publisher becomes a thing
+        # rospy.Subscriber("system_mode", String, self.system_mode_callback)  # TODO: Uncomment when system_mode publisher becomes a thing
 
         # setup all services
         self.service_entrance_exit_gate_message = rospy.Service('entrance_exit_gate_message',
@@ -322,11 +308,23 @@ class RobotXStartServices():
         # start sending heartbeat every second
         rospy.Timer(rospy.Duration(1), self.handle_heartbeat_message)
 
+    def gps_coord_callback(self, lla):
+        self.gps_array = lla
+
+    def gps_odom_callback(self, odom):
+        self.odom = odom
+
+    def auv_status_callback(self, auv_status):
+        self.auv_status = auv_status
+
+    def system_mode_callback(self, system_mode):
+        self.system_mode = system_mode
+
     def handle_heartbeat_message(self, data):
         hst_date_time = self.get_hst_date_time()
-        message = self.robot_x_heartbeat_message.to_string(self.delim, self.team_id, hst_date_time)
-        self.robot_x_client.send_message(message.message)
-        return message
+        message = self.robot_x_heartbeat_message.to_string(self.delim, self.team_id, hst_date_time, self.gps_array,
+                                                           self.odom, self.auv_status, self.system_mode)
+        self.robot_x_client.send_message(message)
 
     def handle_entrance_exit_gate_message(self, data):
         hst_date_time = self.get_hst_date_time()
@@ -360,7 +358,10 @@ class RobotXStartServices():
         return date_string + self.delim + time_string
 
 
-class RobotXClient():
+class RobotXClient:
+    """
+    Handles communication with Technical Director server
+    """
 
     def __init__(self):
         self.TCP_IP = rospy.get_param('td_ip')
@@ -369,20 +370,17 @@ class RobotXClient():
         self.connected = False
         self.socket_connection = None
 
-    def recreate_socket(self):
-        self.socket_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
     def connect(self):
         if not self.connected:
-            print('Attempting Connection to TD Server')
+            rospy.loginfo('Attempting Connection to TD Server')
         while not self.connected and not rospy.is_shutdown():
             # recreate socket
             self.socket_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             # attempt to reconnect, otherwise sleep for 2 seconds
             try:
-                self.recreate_socket()
+                self.socket_connection.connect((self.TCP_IP, self.TCP_PORT))
                 self.connected = True
-                print('Connection to TD Server Successful')
+                rospy.loginfo('Connection to TD Server Successful')
             except socket.error:
                 time.sleep(2)
 
@@ -393,21 +391,11 @@ class RobotXClient():
                 self.socket_connection.send(message)
                 break
             except socket.error:
-                print('Connection to TD Server Lost, Attempting Reconnection')
+                rospy.loginfo('Connection to TD Server Lost')
                 self.connected = False
-                # recreate socket
-                self.recreate_socket()
-                while not self.connected and not rospy.is_shutdown():
-                    # attempt to reconnect, otherwise sleep for 2 seconds
-                    try:
-                        self.socket_connection.connect((self.TCP_IP, self.TCP_PORT))
-                        self.connected = True
-                        print("Re-connection to TD Server Successful")
-                    except socket.error:
-                        time.sleep(2)
+                self.connect()
 
 
 if __name__ == "__main__":
-
     robot_x_start_services = RobotXStartServices()
     rospy.spin()
