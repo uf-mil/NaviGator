@@ -90,4 +90,3 @@ target_link_libraries(shape_identification
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
 )
-
