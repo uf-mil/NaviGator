@@ -34,6 +34,8 @@
                           xyz="-0.285 -0.495 0.129"
                           rpy="0 0 -1.570796" />
 
+  <xacro:fixed_link name="shooter" parent="starboard_cam" xyz="0 0 0.2" rpy="0 0 0" />
+
   <!-- Add 4 thrusters -->
   <xacro:include filename="$(find navigator_gazebo)/urdf/thruster.xacro" />
   <xacro:navigator_thruster name="BL" x="-1.9304" y="1.016"   yaw="0.785398" />
