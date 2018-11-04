@@ -8,6 +8,7 @@ del mil_tasks_core
 from detect_deliver import DetectDeliver
 from teleop import Teleop
 from circle import Circle
+from circle_totem_simple import CircleTotemSimple
 from back_and_forth import BackAndForth
 from start_gate import StartGate
 from coral_survey import CoralSurvey
