@@ -24,15 +24,15 @@ class TestRobotXComms(unittest.TestCase):
         self.team_id = rospy.get_param("~team_id")
         self.td_ip = rospy.get_param("~td_ip")
         self.td_port = rospy.get_param("~td_port")
+        self.number_of_iterations = rospy.get_param("~number_of_iterations")
         self.server = RobotXServer(self.td_ip, self.td_port)
         super(TestRobotXComms, self).__init__(*args)
 
     def test_heartbeat_message(self):
         times_ran = 0
-        times_to_run = 5
         self.server.connect()
 
-        while not rospy.is_shutdown() and times_ran < times_to_run:
+        while not rospy.is_shutdown() and times_ran < self.number_of_iterations:
             rx_data = None
             while rx_data is None:
                 rx_data = self.server.receive_message()
@@ -55,7 +55,6 @@ class TestRobotXComms(unittest.TestCase):
 
     def test_entrance_exit_gate_message(self):
         times_ran = 0
-        times_to_run = 5
         self.server.connect()
         entrance_gate = 1
         exit_gate = 2
@@ -66,7 +65,7 @@ class TestRobotXComms(unittest.TestCase):
         send_robot_x_entrance_exit_gate_message = rospy.ServiceProxy("entrance_exit_gate_message",
                                                                      MessageExtranceExitGate)
 
-        while not rospy.is_shutdown() and times_ran < times_to_run:
+        while not rospy.is_shutdown() and times_ran < self.number_of_iterations:
             rx_data = None
             send_robot_x_entrance_exit_gate_message(entrance_gate, exit_gate, light_buoy_active, light_pattern)
             while rx_data is None:
@@ -98,14 +97,13 @@ class TestRobotXComms(unittest.TestCase):
 
     def test_scan_code_message(self):
         times_ran = 0
-        times_to_run = 5
         self.server.connect()
         light_pattern = "RBG"
 
         rospy.wait_for_service("scan_code_message")
         send_robot_x_scan_code_message = rospy.ServiceProxy("scan_code_message", MessageScanCode)
 
-        while not rospy.is_shutdown() and times_ran < times_to_run:
+        while not rospy.is_shutdown() and times_ran < self.number_of_iterations:
             rx_data = None
             send_robot_x_scan_code_message(light_pattern)
             while rx_data is None:
@@ -131,7 +129,6 @@ class TestRobotXComms(unittest.TestCase):
 
     def test_identify_symbols_dock_message(self):
         times_ran = 0
-        times_to_run = 5
         self.server.connect()
         shape_color = "R"
         shape = "TRIAN"
@@ -140,7 +137,7 @@ class TestRobotXComms(unittest.TestCase):
         send_robot_x_identify_symbols_dock_message = rospy.ServiceProxy("identify_symbols_dock_message",
                                                                         MessageIdentifySymbolsDock)
 
-        while not rospy.is_shutdown() and times_ran < times_to_run:
+        while not rospy.is_shutdown() and times_ran < self.number_of_iterations:
             rx_data = None
             send_robot_x_identify_symbols_dock_message(shape_color, shape)
             while rx_data is None:
@@ -167,7 +164,6 @@ class TestRobotXComms(unittest.TestCase):
 
     def test_detect_deliver_message(self):
         times_ran = 0
-        times_to_run = 5
         self.server.connect()
         shape_color = "R"
         shape = "CIRCL"
@@ -176,7 +172,7 @@ class TestRobotXComms(unittest.TestCase):
         send_robot_x_detect_deliver_message = rospy.ServiceProxy("detect_deliver_message",
                                                                  MessageDetectDeliver)
 
-        while not rospy.is_shutdown() and times_ran < times_to_run:
+        while not rospy.is_shutdown() and times_ran < self.number_of_iterations:
             rx_data = None
             send_robot_x_detect_deliver_message(shape_color, shape)
             while rx_data is None:

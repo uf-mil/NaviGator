@@ -20,6 +20,7 @@
         <param name="~team_id" value="GATOR" />
         <!-- sets data to protocol sample data -->
         <param name="~use_test_data" value="false" />
+        <param name="~number_of_iterations" value="3" />
 
     </test>
 
