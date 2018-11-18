@@ -8,8 +8,8 @@ with the Technical Director server for the RobotX Communication Protocol
 import datetime
 import socket
 import threading
-import time
 
+import rospy
 from geometry_msgs.msg import PointStamped
 from mil_tools import thread_lock
 from nav_msgs.msg import Odometry
@@ -38,6 +38,12 @@ class RobotXStartServices:
         self.team_id = rospy.get_param("~team_id")
         self.td_ip = rospy.get_param("~td_ip")
         self.td_port = rospy.get_param("~td_port")
+        self.use_test_data = rospy.get_param("~use_test_data")
+        # time last called
+        self.time_last_entrance_exit = None
+        self.time_last_scan_code = None
+        self.time_last_identify_symbols = None
+        self.time_last_detect_deliver = None
         # initialize connection to server
         self.robotx_client = RobotXClient(self.td_ip, self.td_port)
         self.robotx_client.connect()
@@ -52,8 +58,10 @@ class RobotXStartServices:
         # setup all subscribers
         rospy.Subscriber("lla", PointStamped, self.gps_coord_callback)
         rospy.Subscriber("odom", Odometry, self.gps_odom_callback)
-        # rospy.Subscriber("auv_status", String, self.auv_status_callback)  # TODO: Uncomment when auv_status publisher becomes a thing
-        # rospy.Subscriber("system_mode", String, self.system_mode_callback)  # TODO: Uncomment when system_mode publisher becomes a thing
+        # rospy.Subscriber("auv_status", String, self.auv_status_callback)
+        # TODO: Uncomment when auv_status publisher becomes a thing
+        # rospy.Subscriber("system_mode", String, self.system_mode_callback)
+        # TODO: Uncomment when system_mode publisher becomes a thing
 
         # setup all services
         self.service_entrance_exit_gate_message = rospy.Service("entrance_exit_gate_message",
@@ -86,31 +94,57 @@ class RobotXStartServices:
 
     def handle_heartbeat_message(self, data):
         hst_date_time = self.get_hst_date_time()
-        message = self.robotx_heartbeat_message.to_string(self.delim, self.team_id, hst_date_time, self.gps_array,
-                                                          self.odom, self.auv_status, self.system_mode)
+
+        message = self.robotx_heartbeat_message.to_string(self.delim, self.team_id, hst_date_time,
+                                                          self.gps_array, self.odom, self.auv_status,
+                                                          self.system_mode, self.use_test_data)
         self.robotx_client.send_message(message)
 
     def handle_entrance_exit_gate_message(self, data):
+        if self.time_last_entrance_exit is not None:
+            seconds_elapsed = rospy.get_time() - self.time_last_entrance_exit
+            if seconds_elapsed < 1:
+                rospy.sleep(1 - seconds_elapsed)
+        self.time_last_entrance_exit = rospy.get_time()
         hst_date_time = self.get_hst_date_time()
-        message = self.robotx_entrance_exit_gate_message.to_string(self.delim, self.team_id, hst_date_time, data)
+        message = self.robotx_entrance_exit_gate_message.to_string(self.delim, self.team_id, hst_date_time,
+                                                                   data, self.use_test_data)
         self.robotx_client.send_message(message.message)
         return message
 
     def handle_scan_code_message(self, data):
+        if self.time_last_scan_code is not None:
+            seconds_elapsed = rospy.get_time() - self.time_last_scan_code
+            if seconds_elapsed < 1:
+                rospy.sleep(1 - seconds_elapsed)
+        self.time_last_scan_code = rospy.get_time()
         hst_date_time = self.get_hst_date_time()
-        message = self.robotx_scan_code_message.to_string(self.delim, self.team_id, hst_date_time, data)
+        message = self.robotx_scan_code_message.to_string(self.delim, self.team_id, hst_date_time,
+                                                          data, self.use_test_data)
         self.robotx_client.send_message(message.message)
         return message
 
     def handle_identify_symbols_dock_message(self, data):
+        if self.time_last_identify_symbols is not None:
+            seconds_elapsed = rospy.get_time() - self.time_last_identify_symbols
+            if seconds_elapsed < 1:
+                rospy.sleep(1 - seconds_elapsed)
+        self.time_last_identify_symbols = rospy.get_time()
         hst_date_time = self.get_hst_date_time()
-        message = self.robotx_identify_symbols_dock_message.to_string(self.delim, self.team_id, hst_date_time, data)
+        message = self.robotx_identify_symbols_dock_message.to_string(self.delim, self.team_id, hst_date_time,
+                                                                      data, self.use_test_data)
         self.robotx_client.send_message(message.message)
         return message
 
     def handle_detect_deliver_message(self, data):
+        if self.time_last_detect_deliver is not None:
+            seconds_elapsed = rospy.get_time() - self.time_last_detect_deliver
+            if seconds_elapsed < 1:
+                rospy.sleep(1 - seconds_elapsed)
+        self.time_last_detect_deliver = rospy.get_time()
         hst_date_time = self.get_hst_date_time()
-        message = self.robotx_detect_deliver_message.to_string(self.delim, self.team_id, hst_date_time, data)
+        message = self.robotx_detect_deliver_message.to_string(self.delim, self.team_id, hst_date_time,
+                                                               data, self.use_test_data)
         self.robotx_client.send_message(message.message)
         return message
 
@@ -145,7 +179,7 @@ class RobotXClient:
                 self.connected = True
                 rospy.loginfo("Connection to TD Server Successful")
             except socket.error:
-                time.sleep(2)
+                rospy.sleep(2)
 
     @thread_lock(lock)
     def send_message(self, message):

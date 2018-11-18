@@ -7,7 +7,6 @@ of messages for the RobotX Communication Protocol
 
 import math
 
-import rospy
 import tf.transformations as trans
 from navigator_msgs.srv import *
 from mil_tools import rosmsg_to_numpy
@@ -30,13 +29,14 @@ class RobotXHeartbeatMessage:
 
     def __init__(self):
         self.message_id = "RXHRB"
+        self.timestamp_last = None
 
     def from_string(self, delim, string):
         data_list = string.split(delim)
         checksum_list = string.split("*")
         return data_list, checksum_list
 
-    def to_string(self, delim, team_id, hst_date_time, gps_array, odom, auv_status, system_mode):
+    def to_string(self, delim, team_id, hst_date_time, gps_array, odom, auv_status, system_mode, use_test_data):
         if gps_array is not None:
             latitude = gps_array.point.x
             longitude = gps_array.point.y
@@ -91,14 +91,14 @@ class RobotXHeartbeatMessage:
         full_data = first_half_data + delim + second_half_data
 
         # test data
-
-        if rospy.get_param("~use_test_data"):
+        if use_test_data:
             full_data = "RXHRB,101218,161229,21.31198,N,157.88972,W,AUVSI,2,1"
 
         checksum_calc = BitwiseXORChecksum()
         checksum = checksum_calc.ret_checksum(full_data)
+        hex_checksum = format(checksum, '02X')
 
-        msg_return = "${0}*{1}\r\n".format(full_data, str(checksum).zfill(2))
+        msg_return = "${0}*{1}\r\n".format(full_data, str(hex_checksum).zfill(2))
 
         return msg_return
 
@@ -116,7 +116,7 @@ class RobotXEntranceExitGateMessage:
         checksum_list = string.split("*")
         return data_list, checksum_list
 
-    def to_string(self, delim, team_id, hst_date_time, data):
+    def to_string(self, delim, team_id, hst_date_time, data, use_test_data):
         if data.light_buoy_active:
             light_buoy_active_letter = "Y"
         else:
@@ -137,13 +137,14 @@ class RobotXEntranceExitGateMessage:
                                                                    data.light_pattern)
 
         # test data
-        if rospy.get_param("~use_test_data"):
+        if use_test_data:
             data = "RXGAT,101218,161229,AUVSI,1,2,Y,RBG"
 
         checksum_calc = BitwiseXORChecksum()
         checksum = checksum_calc.ret_checksum(data)
+        hex_checksum = format(checksum, '02X')
 
-        msg_return = "${0}*{1}\r\n".format(data, str(checksum).zfill(2))
+        msg_return = "${0}*{1}\r\n".format(data, hex_checksum)
 
         return MessageExtranceExitGateResponse(msg_return)
 
@@ -161,7 +162,7 @@ class RobotXScanCodeMessage:
         checksum_list = string.split("*")
         return data_list, checksum_list
 
-    def to_string(self, delim, team_id, hst_date_time, data):
+    def to_string(self, delim, team_id, hst_date_time, data, use_test_data):
         data = "{0}{1}{2}{3}{4}{5}{6}".format(self.message_id,
                                               delim,
                                               hst_date_time,
@@ -171,13 +172,14 @@ class RobotXScanCodeMessage:
                                               data.light_pattern)
 
         # test data
-        if rospy.get_param("~use_test_data"):
+        if use_test_data:
             data = "RXCOD,101218,161229,AUVSI,RBG"
 
         checksum_calc = BitwiseXORChecksum()
         checksum = checksum_calc.ret_checksum(data)
+        hex_checksum = format(checksum, '02X')
 
-        msg_return = "${0}*{1}\r\n".format(data, str(checksum).zfill(2))
+        msg_return = "${0}*{1}\r\n".format(data, hex_checksum)
 
         return MessageScanCodeResponse(msg_return)
 
@@ -195,7 +197,7 @@ class RobotXIdentifySymbolsDockMessage:
         checksum_list = string.split("*")
         return data_list, checksum_list
 
-    def to_string(self, delim, team_id, hst_date_time, data):
+    def to_string(self, delim, team_id, hst_date_time, data, use_test_data):
         data = "{0}{1}{2}{3}{4}{5}{6}{7}{8}".format(self.message_id,
                                                     delim,
                                                     hst_date_time,
@@ -207,13 +209,14 @@ class RobotXIdentifySymbolsDockMessage:
                                                     data.shape)
 
         # test data
-        if rospy.get_param("~use_test_data"):
+        if use_test_data:
             data = "RXDOK,101218,161229,AUVSI,R,TRIAN"
 
         checksum_calc = BitwiseXORChecksum()
         checksum = checksum_calc.ret_checksum(data)
+        hex_checksum = format(checksum, '02X')
 
-        msg_return = "${0}*{1}\r\n".format(data, str(checksum).zfill(2))
+        msg_return = "${0}*{1}\r\n".format(data, hex_checksum)
 
         return MessageIdentifySymbolsDockResponse(msg_return)
 
@@ -231,7 +234,7 @@ class RobotXDetectDeliverMessage:
         checksum_list = string.split("*")
         return data_list, checksum_list
 
-    def to_string(self, delim, team_id, hst_date_time, data):
+    def to_string(self, delim, team_id, hst_date_time, data, use_test_data):
         data = "{0}{1}{2}{3}{4}{5}{6}{7}{8}".format(self.message_id,
                                                     delim,
                                                     hst_date_time,
@@ -243,12 +246,13 @@ class RobotXDetectDeliverMessage:
                                                     data.shape)
 
         # test data
-        if rospy.get_param("~use_test_data"):
+        if use_test_data:
             data = "RXDEL,101218,161229,AUVSI,R,CIRCL"
 
         checksum_calc = BitwiseXORChecksum()
         checksum = checksum_calc.ret_checksum(data)
+        hex_checksum = format(checksum, '02X')
 
-        msg_return = "${0}*{1}\r\n".format(data, str(checksum).zfill(2))
+        msg_return = "${0}*{1}\r\n".format(data, hex_checksum)
 
         return MessageDetectDeliverResponse(msg_return)

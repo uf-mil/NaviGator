@@ -6,7 +6,7 @@
         <param name="~td_ip" value="127.0.0.1" />
         <param name="~td_port" value="1337" />
         <param name="~team_id" value="GATOR" />
-        <!-- sets data to protocol sample data -->
+        <!-- sets data to protocol sample data - KEEP FALSE-->
         <param name="~use_test_data" value="false" />
 
     </node>
