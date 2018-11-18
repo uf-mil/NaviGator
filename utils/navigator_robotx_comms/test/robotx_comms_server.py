@@ -12,8 +12,11 @@ import threading
 import rospy
 import rostest
 from mil_tools import thread_lock
+from navigator_msgs.srv import MessageExtranceExitGate, MessageScanCode, \
+    MessageIdentifySymbolsDock, MessageDetectDeliver
 
-from navigator_robotx_comms.navigator_robotx_comms import *
+from navigator_robotx_comms.navigator_robotx_comms import BitwiseXORChecksum, RobotXDetectDeliverMessage, \
+    RobotXHeartbeatMessage, RobotXEntranceExitGateMessage, RobotXScanCodeMessage, RobotXIdentifySymbolsDockMessage
 
 lock = threading.Lock()
 
@@ -315,8 +318,6 @@ class RobotXServer:
                 self.conn, self.conn_ip = self.socket_connection.accept()
                 self.connected = True
             except socket.error:
-                print "Port: ", self.tcp_port
-                print "IP: ", self.tcp_ip
                 traceback.print_exc()
                 self.disconnect()
                 rospy.sleep(2)

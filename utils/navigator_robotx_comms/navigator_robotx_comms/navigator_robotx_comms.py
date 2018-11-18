@@ -8,8 +8,9 @@ of messages for the RobotX Communication Protocol
 import math
 
 import tf.transformations as trans
-from navigator_msgs.srv import *
 from mil_tools import rosmsg_to_numpy
+from navigator_msgs.srv import MessageExtranceExitGateResponse, MessageScanCodeResponse, \
+    MessageIdentifySymbolsDockResponse, MessageDetectDeliverResponse
 
 
 class BitwiseXORChecksum:

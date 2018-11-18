@@ -13,8 +13,11 @@ import rospy
 from geometry_msgs.msg import PointStamped
 from mil_tools import thread_lock
 from nav_msgs.msg import Odometry
+from navigator_msgs.srv import MessageExtranceExitGate, MessageScanCode, \
+    MessageIdentifySymbolsDock, MessageDetectDeliver
 
-from navigator_robotx_comms.navigator_robotx_comms import *
+from navigator_robotx_comms.navigator_robotx_comms import RobotXDetectDeliverMessage, RobotXHeartbeatMessage, \
+    RobotXEntranceExitGateMessage, RobotXScanCodeMessage, RobotXIdentifySymbolsDockMessage
 
 lock = threading.Lock()
 
