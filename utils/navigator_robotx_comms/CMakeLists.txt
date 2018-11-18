@@ -7,8 +7,10 @@ project(navigator_robotx_comms)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
+  ros_alarms
   tf
   geometry_msgs
+  std_msgs
   nav_msgs
   navigator_msgs
   mil_tools

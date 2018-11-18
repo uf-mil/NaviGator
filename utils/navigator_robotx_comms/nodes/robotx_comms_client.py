@@ -10,9 +10,11 @@ import socket
 import threading
 
 import rospy
+from ros_alarms import AlarmListener
 from geometry_msgs.msg import PointStamped
 from mil_tools import thread_lock
 from nav_msgs.msg import Odometry
+from std_msgs.msg import String
 from navigator_msgs.srv import MessageExtranceExitGate, MessageScanCode, \
     MessageIdentifySymbolsDock, MessageDetectDeliver
 
@@ -33,8 +35,10 @@ class RobotXStartServices:
         # define all variables for subscribers
         self.gps_array = None
         self.odom = None
-        self.auv_status = 1  # TODO: Change to None after auv_status publisher becomes a thing
-        self.system_mode = 2  # TODO: Change to None after system_mode publisher becomes a thing
+        self.auv_status = 1  # we don't have an AUV, so this will always be 1
+        self.system_mode = None
+        self.wrench = None
+        self.kill = False
         # define delimiter for messages
         self.delim = ','
         # define parameters
@@ -61,10 +65,11 @@ class RobotXStartServices:
         # setup all subscribers
         rospy.Subscriber("lla", PointStamped, self.gps_coord_callback)
         rospy.Subscriber("odom", Odometry, self.gps_odom_callback)
-        # rospy.Subscriber("auv_status", String, self.auv_status_callback)
-        # TODO: Uncomment when auv_status publisher becomes a thing
-        # rospy.Subscriber("system_mode", String, self.system_mode_callback)
-        # TODO: Uncomment when system_mode publisher becomes a thing
+        rospy.Subscriber("/wrench/selected", String, self.wrench_callback)
+
+        # track kill state for inferring system mode
+        self.kill_listener = AlarmListener('kill', self.kill_callback)
+        self.kill_listener.wait_for_server()
 
         # setup all services
         self.service_entrance_exit_gate_message = rospy.Service("entrance_exit_gate_message",
@@ -83,6 +88,20 @@ class RobotXStartServices:
         # start sending heartbeat every second
         rospy.Timer(rospy.Duration(1), self.handle_heartbeat_message)
 
+    def update_system_mode(self):
+        if self.kill is True:
+            self.system_mode = 3
+        elif self.wrench is "autonomous" or self.wrench is "/wrench/autonomous":
+            self.system_mode = 2
+        else:
+            self.system_mode = 1
+
+    def wrench_callback(self, wrench):
+        self.wrench = wrench
+
+    def kill_callback(self, alarm):
+        self.kill = alarm.raised
+
     def gps_coord_callback(self, lla):
         self.gps_array = lla
 
@@ -96,6 +115,7 @@ class RobotXStartServices:
         self.system_mode = system_mode
 
     def handle_heartbeat_message(self, data):
+        self.update_system_mode()
         hst_date_time = self.get_hst_date_time()
 
         message = self.robotx_heartbeat_message.to_string(self.delim, self.team_id, hst_date_time,
