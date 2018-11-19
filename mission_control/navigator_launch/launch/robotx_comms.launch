@@ -1,4 +1,5 @@
 <launch>
+
     <!-- start robotx_comms node -->
     <node name="navigator_robotx_comms" pkg="navigator_robotx_comms" type="robotx_comms_client.py" >
 	
