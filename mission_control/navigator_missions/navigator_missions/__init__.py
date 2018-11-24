@@ -28,4 +28,5 @@ from reload_launcher import ReloadLauncher
 from track_target import TrackTarget
 from go_to_poi import GoToPOI
 from entrance_gate import EntranceGate
+from ring_recovery import RingRecovery
 import pose_editor
