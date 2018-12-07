@@ -29,4 +29,5 @@ from track_target import TrackTarget
 from go_to_poi import GoToPOI
 from entrance_gate import EntranceGate
 from ring_recovery import RingRecovery
+from detect_deliver_find import DetectDeliverFind
 import pose_editor
