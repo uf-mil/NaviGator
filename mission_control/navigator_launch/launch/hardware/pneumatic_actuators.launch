@@ -1,6 +1,6 @@
 <launch>
     <node pkg="mil_pneumatic_actuator" type="pneumatic_actuator_node" name="actuator_driver" output="screen">
-        <param name="port" value="/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AI02L380-if00-port0"/>
+        <param name="port" value="/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A403IMCP-if00-port0"/>
         <rosparam param="actuators">
           # ONLY BL has been verfied on navigator, others are not currently connected
           BL_unlock: 1
