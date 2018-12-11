@@ -4,6 +4,7 @@ from mil_vision_tools import VisionNode, create_object_msg, ImageMux, auto_canny
 from mil_vision_tools import CentroidObjectsTracker, quaternion_from_rvec, contour_centroid
 from mil_tools import Image_Publisher, numpy_quat_pair_to_pose
 from geometry_msgs.msg import PoseStamped
+import itertools
 import numpy as np
 import cv2
 
@@ -39,7 +40,7 @@ class DetectDeliverTargetDetector(VisionNode):
         self.image_mux[0] = blur
 
         # Threshold image to keep only black regions, like the target border
-        _, thresh = cv2.threshold(blur, 50, 255, cv2.THRESH_BINARY_INV)
+        _, thresh = cv2.threshold(blur, 100, 255, cv2.THRESH_BINARY_INV)
         self.image_mux[1] = thresh
 
         # Find edges in thresholded image using Canny
@@ -84,26 +85,45 @@ class DetectDeliverTargetDetector(VisionNode):
             found.append(create_object_msg("target_large", contour=cnts[num - 1], confidence=1.0))
 
         # Get objects which have persisted over many frames
-        persistent = self.tracker.get_persistent_objects(min_observations=8, min_age=rospy.Duration(1.5))
+        persistent = self.tracker.get_persistent_objects(min_observations=4, min_age=rospy.Duration(1))
 
-        if len(persistent) > 0:
-            if self.first_object_id == -1:
-                self.first_object_id = persistent[0].id
-                print 'FIRST DETECTED IS ', self.first_object_id
-            for obj in persistent:
-                if obj.id != self.first_object_id:
+        if len(persistent) > 1:
+            for idx1, idx2 in itertools.combinations(range(len(persistent)), 2):
+                print persistent[idx1].features, persistent[idx2].features
+
+                y1 = persistent[idx1].features[1]
+                y2 = persistent[idx2].features[1]
+
+                if abs(y2 - y1) > 20:
                     continue
+                if persistent[idx1].features[0] > persistent[idx2].features[0]:
+                    idx1, idx2 = idx2, idx1
+
+                large_target, small_target = persistent[idx1].data, persistent[idx2].data
+
+
+                putText_ul(img, "Large", persistent[idx1].features, color=(0, 0, 255), fontScale=2)
+                putText_ul(img, "Small", persistent[idx2].features, color=(0, 0, 255), fontScale=2)
+
+
+
+                posing_large = True
+                if posing_large:
+                    tvec, rvec = self.large_target_model.get_pose_3D(large_target, cam=self.camera_model, rectified=True)
+                else:
+                    tvec, rvec = self.small_target_model.get_pose_3D(small_target, cam=self.camera_model, rectified=True)
 
                 ps = PoseStamped()
                 ps.header = self._image_sub.last_image_header
-                # Get 3D pose of target use PnP
-                tvec, rvec = self.small_target_model.get_pose_3D(obj.data, cam=self.camera_model, rectified=True)
                 # Throw out up/down and convert to quaternion
                 # rvec[1] = 0.
                 rvec[2] = 0.
                 rvec = rvec / np.linalg.norm(rvec)
+                print tvec
                 ps.pose = numpy_quat_pair_to_pose(tvec, quaternion_from_rvec(rvec))
                 self.pose_pub.publish(ps)
+
+                break
 
         self.image_mux[3] = img
         self.debug_pub.publish(self.image_mux())
