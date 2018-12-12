@@ -115,6 +115,7 @@ class Navigator(BaseTask):
 
         try:
             cls._actuator_client = cls.nh.get_service_client('/actuator_driver/actuate', SetValve)
+            cls._actuator_client2 = cls.nh.get_service_client('/actuator_driver2/actuate', SetValve)
             cls._database_query = cls.nh.get_service_client('/database/requests', ObjectDBQuery)
             cls._camera_database_query = cls.nh.get_service_client(
                 '/camera_database/requests', navigator_srvs.CameraDBQuery)
@@ -221,41 +222,43 @@ class Navigator(BaseTask):
         '''
         Execute sequence to deploy one thruster
         '''
+        board = 2 if name in ['BL', 'BR'] else 1
         extend = name + '_extend'
         retract = name + '_retract'
         unlock = name + '_unlock'
         # Pull thruster up a bit to remove pressure from lock
-        yield self.set_valve(retract, True)
+        yield self.set_valve(retract, True, board=board)
         yield self.nh.sleep(self._actuator_timing['deploy_loosen_time'])
         # Stop pulling thruster up and unlock
-        yield self.set_valve(retract, False)
-        yield self.set_valve(unlock, True)
+        yield self.set_valve(retract, False, board=board)
+        yield self.set_valve(unlock, True, board=board)
         # Beging extending piston to push thruster down
-        yield self.set_valve(extend, True)
+        yield self.set_valve(extend, True, board=board)
         yield self.nh.sleep(self._actuator_timing['deploy_wait_time'])
         # Lock and stop extending after waiting a time for lock to engage
-        yield self.set_valve(unlock, False)
+        yield self.set_valve(unlock, False, board=board)
         yield self.nh.sleep(self._actuator_timing['deploy_lock_time'])
-        yield self.set_valve(extend, False)
+        yield self.set_valve(extend, False, board=board)
 
     @util.cancellableInlineCallbacks
     def retract_thruster(self, name):
         '''
         Execute sequence to retract one thruster
         '''
+        board = 2 if name in ['BL', 'BR'] else 1
         retract = name + '_retract'
         unlock = name + '_unlock'
         # Unlock and begin pulling thruster up
-        yield self.set_valve(unlock, True)
-        yield self.set_valve(retract, True)
+        yield self.set_valve(unlock, True, board=board)
+        yield self.set_valve(retract, True, board=board)
         # Wait time for piston to fully retract
         yield self.nh.sleep(self._actuator_timing['retract_wait_time'])
         # Lock thruster in place
-        yield self.set_valve(unlock, False)
+        yield self.set_valve(unlock, False, board=board)
         # Wait some time for lock to engage
         yield self.nh.sleep(self._actuator_timing['retract_lock_time'])
         # Stop pulling up
-        yield self.set_valve(retract, False)
+        yield self.set_valve(retract, False, board=board)
 
     def deploy_thrusters(self):
         '''
@@ -292,9 +295,12 @@ class Navigator(BaseTask):
         yield self.nh.sleep(0.5)
         self.launcher_state = "inactive"
 
-    def set_valve(self, name, state):
+    def set_valve(self, name, state, board=1):
         req = SetValveRequest(actuator=name, opened=state)
-        return self._actuator_client(req)
+        if board == 2:
+            return self._actuator_client2(req)
+        else:
+            return self._actuator_client(req)
 
     @util.cancellableInlineCallbacks
     def get_sorted_objects(self, name, n=-1, throw=True, **kwargs):
