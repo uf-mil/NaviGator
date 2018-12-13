@@ -1,0 +1,68 @@
+# Defines one labeling project
+datasets:
+    - name: navigator_totems_color_seecam
+      sources:
+        - file: 2018-02-18/blue_totem_bright.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.5
+        - file: 2018-02-18/red_totem_bright.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.5
+        - file: 2018-02-18/yellow_totem_bright.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.5
+        - file: 2018-02-18/white_totem_bright.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.5
+        - file: 2018-03-18/greentotem.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.2
+        - file: 2018-03-18/redtotem.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 2.0
+        - file: 2018-03-18/whitetotem.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.25
+        - file: 2018-02-04/greentotem.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.2
+        - file: 2018-02-04/bluetotem.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.3
+        - file: 2018-02-04/blue_totem_cloudy.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.8
+        - file: 2018-02-04/green_totem_cloudy.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.5
+        - file: 2018-02-04/red_totem_cloudy.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.5
+        - file: 2018-02-04/yellow_totem_cloudy.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.75
+        - file: 2018-02-04/yellowtotem.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.3
+        - file: 2018-02-04/white_totem_cloudy.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.75
+        - file: 2018-02-04/whitetotem.bag
+          topic: /camera/seecam/image_raw
+          encoding: rect_color
+          freq: 0.75
