@@ -47,3 +47,6 @@ Thumbs.db
 
 # Kosher Pickles
 *.p
+
+perception/navigator_vision/ml_classifiers/docking_challenge/dock_inference
+perception/navigator_vision/ml_classifiers/obsc_perception/obsc_inference
