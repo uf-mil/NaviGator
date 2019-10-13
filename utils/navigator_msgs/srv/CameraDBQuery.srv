@@ -1,4 +1,0 @@
-string name
-uint32 id		
----
-bool found			#Did we actually find the requested object?
