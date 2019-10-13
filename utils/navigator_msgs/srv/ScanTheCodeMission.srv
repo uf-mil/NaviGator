@@ -1,5 +1,0 @@
-PerceptionObject object
----
-bool observing
-bool found
-string[] colors
