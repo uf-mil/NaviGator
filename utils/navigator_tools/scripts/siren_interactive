@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+from mil_tools import SimulatedSerial
+import serial
+
+
+class SimulatedSirenBoard(SimulatedSerial):
+    '''
+    Simulates the serial communication of the siren board
+    '''
+    def write(self, data):
+        for byte in data:
+            if byte == 'A':
+                print 'On'
+            else:
+                print 'Off'
+
+
+class SirenBoard(object):
+    '''
+    Wrapper for siren board
+    '''
+    def __init__(self, port, baudrate, sim=False):
+        if sim:
+            self.ser = SimulatedSirenBoard()
+        else:
+            self.ser = serial.Serial(port=port, baudrate=baudrate)
+
+    def on(self):
+        self.ser.write('A')
+
+    def off(self):
+        self.ser.write('B')
+
+if __name__ == '__main__':
+    print 'Siren board interactive Console'
+    board = SirenBoard('/dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_DN05A8R2-if00-port0', 115200, sim=False)
+    while True:
+        try:
+            c = raw_input('1 for on, 2 for off: ')
+            if c == '1':
+                board.on()
+            elif c == '2':
+                board.off()
+            else:
+                print 'Unrecognized command'
+        except KeyboardInterrupt:
+            break
